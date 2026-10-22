@@ -61,6 +61,7 @@
     if(!walk)return {ok:false,message:'仅在独立角色体验中接续虚构样例。'};
     const d=read(),e=d.exams[examId];if(!e)return {ok:false,message:'请先选择本场。'};
     try{
+      if(e.walkAdvances?.includes(action))return {ok:true,message:'继续已接续的样例，保留本角色已完成的操作。'};
       if(action==='materials'&&walk==='academic'){if(e.status==='draft')throw Error('请先由教务开放本场。');completeWalkSample(e);}
       else if(action==='graded'&&walk==='admin')completeWalkSample(e,true);
       else if(action==='published'&&walk==='student')completeWalkSample(e,true,true);
@@ -68,7 +69,7 @@
       else if(action==='receive'&&walk==='invigilator'){const r=e.records[e.current];if(!r||r.handoff!=='pending')throw Error('先完成学员核对并发出交接。');r.handoff='accepted';}
       else if(action==='onsite-end'&&walk==='invigilator'){const r=e.records[e.current];if(!r||r.handoff!=='accepted')throw Error('先查看录制员接收后的状态。');Object.assign(r,{onsiteEnded:true,stage:'done',subject:2});r.files=subjects.map((_,q)=>({...fullFile(e,r.id,q,1,e.staff.recorder),upload:'queued',checked:false}));e.lastEnded=r.id;e.current=null;}
       else throw Error('当前角色没有这一段体验接续。');
-      write(d);return {ok:true,message:'已接续其他岗位完成后的虚构样例。'};
+      (e.walkAdvances??=[]).push(action);write(d);return {ok:true,message:'已接续其他岗位完成后的虚构样例。'};
     }catch(error){return {ok:false,message:error.message};}
   }
   let memory=null,storageError=false;
