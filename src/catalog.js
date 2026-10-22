@@ -1,15 +1,4 @@
-window.Catalog = [
-  {
-    "id": "U01",
-    "as": "admin",
-    "title": "管理员工作台",
-    "sub": "本场待办与工作入口",
-    "device": "desktop",
-    "phase": 0,
-    "f": "F01–F09",
-    "x": 60,
-    "y": 145
-  },
+window.Catalog=[
   {
     "id": "U02",
     "as": "admin",
@@ -18,6 +7,18 @@ window.Catalog = [
     "device": "desktop",
     "phase": 0,
     "f": "F01–F09",
+    "x": 60,
+    "y": 145
+  },
+  {
+    "id": "U04",
+    "screen": "U04",
+    "title": "新建考试",
+    "sub": "独立场次与配置参考",
+    "device": "desktop",
+    "phase": 0,
+    "f": "F01–F09",
+    "as": "admin",
     "x": 730,
     "y": 145
   },
@@ -33,10 +34,10 @@ window.Catalog = [
     "y": 145
   },
   {
-    "id": "W19",
+    "id": "W13",
     "as": "admin",
-    "title": "账号列表",
-    "sub": "选择账号与负责范围",
+    "title": "评分分工",
+    "sub": "按科分配 · 每人评本科全体",
     "device": "desktop",
     "phase": 0,
     "f": "F01–F09",
@@ -44,10 +45,10 @@ window.Catalog = [
     "y": 145
   },
   {
-    "id": "W09",
+    "id": "W19",
     "as": "admin",
-    "title": "账号岗位详情",
-    "sub": "兼岗、停用与未完任务",
+    "title": "账号列表",
+    "sub": "选择账号与负责范围",
     "device": "desktop",
     "phase": 0,
     "f": "F01–F09",
@@ -55,10 +56,10 @@ window.Catalog = [
     "y": 145
   },
   {
-    "id": "W13",
+    "id": "W09",
     "as": "admin",
-    "title": "评分分工",
-    "sub": "按科分配 · 每人评本科全体",
+    "title": "账号岗位详情",
+    "sub": "兼岗、停用与未完任务",
     "device": "desktop",
     "phase": 0,
     "f": "F01–F09",
@@ -110,495 +111,6 @@ window.Catalog = [
     "y": 735
   },
   {
-    "id": "U01A",
-    "as": "academic",
-    "title": "教务工作台",
-    "sub": "只处理本场准备与材料",
-    "device": "desktop",
-    "phase": 1,
-    "f": "F01–F09",
-    "x": 60,
-    "y": 2605,
-    "screen": "U01"
-  },
-  {
-    "id": "U02A",
-    "as": "academic",
-    "title": "教务考试列表",
-    "sub": "选择负责场次",
-    "device": "desktop",
-    "phase": 1,
-    "f": "F01–F09",
-    "x": 730,
-    "y": 2605,
-    "screen": "U02"
-  },
-  {
-    "id": "U03A",
-    "as": "academic",
-    "title": "教务本场总览",
-    "sub": "准备与材料的整体进度",
-    "device": "desktop",
-    "phase": 1,
-    "f": "F01–F09",
-    "x": 1400,
-    "y": 2605,
-    "screen": "U03"
-  },
-  {
-    "id": "W01",
-    "as": "academic",
-    "title": "本场准备",
-    "sub": "准备清单与完成依据",
-    "device": "desktop",
-    "phase": 1,
-    "f": "F01–F09",
-    "x": 2070,
-    "y": 2605
-  },
-  {
-    "id": "W11",
-    "as": "academic",
-    "title": "名单选择与字段对照",
-    "sub": "先选样例 · 对照导入字段",
-    "device": "desktop",
-    "phase": 1,
-    "f": "F01–F09",
-    "x": 2740,
-    "y": 2605
-  },
-  {
-    "id": "W02",
-    "as": "academic",
-    "title": "名单预览与导入结果",
-    "sub": "同名核对 · 批次结果",
-    "device": "desktop",
-    "phase": 1,
-    "f": "F01–F09",
-    "x": 60,
-    "y": 3195
-  },
-  {
-    "id": "W12",
-    "as": "academic",
-    "title": "考场与排次",
-    "sub": "核对名单、人员与设备",
-    "device": "desktop",
-    "phase": 1,
-    "f": "F01–F09",
-    "x": 730,
-    "y": 3195
-  },
-  {
-    "id": "W03",
-    "as": "academic",
-    "title": "整套试卷",
-    "sub": "缺科排除 · 本场版本",
-    "device": "desktop",
-    "phase": 1,
-    "f": "F01–F09",
-    "x": 1400,
-    "y": 3195
-  },
-  {
-    "id": "W04",
-    "as": "academic",
-    "title": "材料清单与开放",
-    "sub": "按名单找齐本科材料",
-    "device": "desktop",
-    "phase": 1,
-    "f": "F01–F09",
-    "x": 2070,
-    "y": 3195
-  },
-  {
-    "id": "W14",
-    "as": "academic",
-    "title": "材料详情",
-    "sub": "原学员、原科、原视频版本",
-    "device": "desktop",
-    "phase": 1,
-    "f": "F01–F09",
-    "x": 2740,
-    "y": 3195
-  },
-  {
-    "id": "W15",
-    "as": "academic",
-    "title": "材料问题处理",
-    "sub": "核验回应 · 回原任务",
-    "device": "desktop",
-    "phase": 1,
-    "f": "F01–F09",
-    "x": 60,
-    "y": 3785
-  },
-  {
-    "id": "U01T",
-    "as": "teacher1",
-    "title": "老师1工作台",
-    "sub": "本人待办与工作入口",
-    "device": "desktop",
-    "phase": 2,
-    "f": "F01–F09",
-    "x": 60,
-    "y": 4475,
-    "screen": "U01"
-  },
-  {
-    "id": "W05",
-    "as": "teacher1",
-    "title": "我的评卷任务",
-    "sub": "只见分配给本人的科目",
-    "device": "desktop",
-    "phase": 2,
-    "f": "F01–F09",
-    "x": 730,
-    "y": 4475
-  },
-  {
-    "id": "W16",
-    "as": "teacher1",
-    "title": "本科任务队列",
-    "sub": "未评、草稿、已保存、问题",
-    "device": "desktop",
-    "phase": 2,
-    "f": "F01–F09",
-    "x": 1400,
-    "y": 4475
-  },
-  {
-    "id": "W06",
-    "as": "teacher1",
-    "title": "看片评分",
-    "sub": "只提交本人原始分",
-    "device": "desktop",
-    "phase": 2,
-    "f": "F01–F09",
-    "x": 2070,
-    "y": 4475
-  },
-  {
-    "id": "W17",
-    "as": "teacher1",
-    "title": "本科完成与记录",
-    "sub": "确认保存 · 继续剩余任务",
-    "device": "desktop",
-    "phase": 2,
-    "f": "F01–F09",
-    "x": 2740,
-    "y": 4475
-  },
-  {
-    "id": "W15T",
-    "as": "teacher1",
-    "title": "我报告的问题",
-    "sub": "只见本人报告与回应",
-    "device": "desktop",
-    "phase": 2,
-    "f": "F01–F09",
-    "x": 60,
-    "y": 5065,
-    "screen": "W15"
-  },
-  {
-    "id": "U01T2",
-    "as": "teacher2",
-    "title": "老师2工作台",
-    "sub": "本人待办与工作入口",
-    "device": "desktop",
-    "phase": 2,
-    "f": "F01–F09",
-    "x": 730,
-    "y": 5065,
-    "screen": "U01"
-  },
-  {
-    "id": "W05T2",
-    "as": "teacher2",
-    "title": "老师2独立任务",
-    "sub": "老师2本人数据与草稿",
-    "device": "desktop",
-    "phase": 2,
-    "f": "F01–F09",
-    "x": 1400,
-    "y": 5065,
-    "screen": "W05"
-  },
-  {
-    "id": "M00",
-    "as": "invigilator",
-    "title": "我的监考任务",
-    "sub": "选择本人负责的考场",
-    "device": "mobile",
-    "phase": 3,
-    "f": "F01–F09",
-    "x": 60,
-    "y": 6345
-  },
-  {
-    "id": "M01",
-    "as": "invigilator",
-    "title": "本考场签到与候考",
-    "sub": "签到记录 · 名单筛选",
-    "device": "mobile",
-    "phase": 3,
-    "f": "F01–F09",
-    "x": 440,
-    "y": 6345
-  },
-  {
-    "id": "M03",
-    "as": "invigilator",
-    "title": "本考场签到码",
-    "sub": "只出码，不替学生确认",
-    "device": "mobile",
-    "phase": 3,
-    "f": "F01–F09",
-    "x": 820,
-    "y": 6345
-  },
-  {
-    "id": "M02",
-    "as": "invigilator",
-    "title": "学员核对详情",
-    "sub": "核对本人、签到与题套",
-    "device": "mobile",
-    "phase": 3,
-    "f": "F01–F09",
-    "x": 1200,
-    "y": 6345
-  },
-  {
-    "id": "M04",
-    "as": "invigilator",
-    "title": "本次交接回执",
-    "sub": "等待接收 · 已接收 · 已结束",
-    "device": "mobile",
-    "phase": 3,
-    "f": "F01–F09",
-    "x": 1580,
-    "y": 6345
-  },
-  {
-    "id": "A00",
-    "as": "recorder",
-    "title": "我的录制任务",
-    "sub": "本人设备与待传文件",
-    "device": "mobile",
-    "phase": 4,
-    "f": "F01–F09",
-    "x": 60,
-    "y": 7625
-  },
-  {
-    "id": "A01",
-    "as": "recorder",
-    "title": "开场设备检查",
-    "sub": "画面、收音与同屏",
-    "device": "mobile",
-    "phase": 4,
-    "f": "F01–F09",
-    "x": 440,
-    "y": 7625
-  },
-  {
-    "id": "A04",
-    "as": "recorder",
-    "title": "当前学员与三科进度",
-    "sub": "接收条件 · 本位完成结果",
-    "device": "mobile",
-    "phase": 4,
-    "f": "F01–F09",
-    "x": 820,
-    "y": 7625
-  },
-  {
-    "id": "A02",
-    "as": "recorder",
-    "title": "本科准备与录制",
-    "sub": "准备、作答、本地结果",
-    "device": "landscape",
-    "phase": 4,
-    "f": "F01–F09",
-    "x": 1200,
-    "y": 7625
-  },
-  {
-    "id": "A03",
-    "as": "recorder",
-    "title": "本机视频上传队列",
-    "sub": "逐文件状态与原文件重试",
-    "device": "mobile",
-    "phase": 4,
-    "f": "F01–F09",
-    "x": 1580,
-    "y": 7625
-  },
-  {
-    "id": "A05",
-    "as": "recorder",
-    "title": "原文件详情",
-    "sub": "原学员原科 · 保存与收到",
-    "device": "mobile",
-    "phase": 4,
-    "f": "F01–F09",
-    "x": 1960,
-    "y": 7625
-  },
-  {
-    "id": "S00",
-    "as": "studentA",
-    "title": "我的考试",
-    "sub": "本人考试列表",
-    "device": "mobile",
-    "phase": 5,
-    "f": "F01–F09",
-    "x": 60,
-    "y": 8905
-  },
-  {
-    "id": "S01",
-    "as": "studentA",
-    "title": "本场安排",
-    "sub": "考场排次与下一步",
-    "device": "mobile",
-    "phase": 5,
-    "f": "F01–F09",
-    "x": 440,
-    "y": 8905
-  },
-  {
-    "id": "S03",
-    "as": "studentA",
-    "title": "本人扫码核对",
-    "sub": "正确、错场、失效分支",
-    "device": "mobile",
-    "phase": 5,
-    "f": "F01–F09",
-    "x": 820,
-    "y": 8905,
-    "scan": "valid"
-  },
-  {
-    "id": "S04",
-    "as": "studentA",
-    "title": "本人签到结果",
-    "sub": "出示原记录 · 场外候考",
-    "device": "mobile",
-    "phase": 5,
-    "f": "F01–F09",
-    "x": 1200,
-    "y": 8905,
-    "fixture": "signed"
-  },
-  {
-    "id": "D01",
-    "as": "studentA",
-    "title": "本次抽题",
-    "sub": "一次结果 · 重复查询",
-    "device": "mobile",
-    "phase": 5,
-    "f": "F01–F09",
-    "x": 1580,
-    "y": 8905
-  },
-  {
-    "id": "S06",
-    "as": "studentA",
-    "title": "本人参加进度",
-    "sub": "签到、抽题、场内、发布",
-    "device": "mobile",
-    "phase": 5,
-    "f": "F01–F09",
-    "x": 1960,
-    "y": 8905
-  },
-  {
-    "id": "S05",
-    "as": "studentA",
-    "title": "本人成绩列表",
-    "sub": "本场与历次结果入口",
-    "device": "mobile",
-    "phase": 5,
-    "f": "F01–F09",
-    "x": 2340,
-    "y": 8905
-  },
-  {
-    "id": "S02",
-    "as": "studentA",
-    "title": "本次成绩",
-    "sub": "只读本人发布快照",
-    "device": "mobile",
-    "phase": 5,
-    "f": "F01–F09",
-    "x": 2720,
-    "y": 8905
-  },
-  {
-    "id": "S02U",
-    "as": "studentA",
-    "title": "成绩未发布",
-    "sub": "独立未发布样例",
-    "device": "mobile",
-    "phase": 5,
-    "f": "F01–F09",
-    "x": 60,
-    "y": 9495,
-    "screen": "S02",
-    "fixture": "pending"
-  },
-  {
-    "id": "S02P",
-    "as": "studentA",
-    "title": "成绩已发布",
-    "sub": "独立已发布样例",
-    "device": "mobile",
-    "phase": 5,
-    "f": "F01–F09",
-    "x": 440,
-    "y": 9495,
-    "screen": "S02",
-    "fixture": "published"
-  },
-  {
-    "id": "U04",
-    "screen": "U04",
-    "title": "新建考试",
-    "sub": "独立场次与配置参考",
-    "device": "desktop",
-    "phase": 0,
-    "f": "F01–F09",
-    "as": "admin",
-    "x": 60,
-    "y": 1325
-  },
-  {
-    "id": "T01",
-    "screen": "T01",
-    "title": "本场人员移交",
-    "sub": "发起、待接收、回执",
-    "device": "desktop",
-    "phase": 0,
-    "f": "F01–F09",
-    "as": "admin",
-    "x": 730,
-    "y": 1325
-  },
-  {
-    "id": "T02",
-    "screen": "T02",
-    "title": "移交单详情",
-    "sub": "当前人、设备、原文件",
-    "device": "desktop",
-    "phase": 0,
-    "f": "F01–F09",
-    "as": "admin",
-    "x": 1400,
-    "y": 1325
-  },
-  {
     "id": "X01",
     "screen": "X01",
     "title": "异常处置待办",
@@ -607,7 +119,7 @@ window.Catalog = [
     "phase": 0,
     "f": "F01–F09",
     "as": "admin",
-    "x": 2070,
+    "x": 60,
     "y": 1325
   },
   {
@@ -619,7 +131,7 @@ window.Catalog = [
     "phase": 0,
     "f": "F01–F09",
     "as": "admin",
-    "x": 2740,
+    "x": 730,
     "y": 1325
   },
   {
@@ -631,8 +143,8 @@ window.Catalog = [
     "phase": 0,
     "f": "F01–F09",
     "as": "admin",
-    "x": 60,
-    "y": 1915
+    "x": 1400,
+    "y": 1325
   },
   {
     "id": "W25",
@@ -643,20 +155,58 @@ window.Catalog = [
     "phase": 0,
     "f": "F01–F09",
     "as": "admin",
-    "x": 730,
-    "y": 1915
+    "x": 2070,
+    "y": 1325
   },
   {
     "id": "W26",
     "screen": "W26",
-    "title": "原分数审计",
-    "sub": "旧分数与变更原因",
+    "title": "分数变更记录",
+    "sub": "旧分数、视频版本与变更原因",
     "device": "desktop",
     "phase": 0,
     "f": "F01–F09",
     "as": "admin",
-    "x": 1400,
-    "y": 1915
+    "x": 2740,
+    "y": 1325
+  },
+  {
+    "id": "T01",
+    "screen": "T01",
+    "title": "候选 · 临时更换工作人员",
+    "sub": "低频场景待确认 · 正常流程无需经过",
+    "device": "desktop",
+    "phase": 0,
+    "f": "F01–F09",
+    "as": "admin",
+    "x": 60,
+    "y": 1915,
+    "kind": "candidate"
+  },
+  {
+    "id": "T02",
+    "screen": "T02",
+    "title": "候选 · 工作人员更换记录",
+    "sub": "低频场景待确认 · 正常流程无需经过",
+    "device": "desktop",
+    "phase": 0,
+    "f": "F01–F09",
+    "as": "admin",
+    "x": 730,
+    "y": 1915,
+    "kind": "candidate"
+  },
+  {
+    "id": "U02A",
+    "as": "academic",
+    "title": "教务考试列表",
+    "sub": "选择负责场次",
+    "device": "desktop",
+    "phase": 1,
+    "f": "F01–F09",
+    "x": 60,
+    "y": 2605,
+    "screen": "U02"
   },
   {
     "id": "U04A",
@@ -668,31 +218,154 @@ window.Catalog = [
     "f": "F01–F09",
     "as": "academic",
     "x": 730,
-    "y": 3785
+    "y": 2605
   },
   {
-    "id": "W24T",
-    "screen": "W24",
-    "title": "本人改分申请",
-    "sub": "提交、撤回与处理回执",
+    "id": "W01",
+    "as": "academic",
+    "title": "本场准备",
+    "sub": "准备清单与完成依据",
     "device": "desktop",
-    "phase": 2,
+    "phase": 1,
     "f": "F01–F09",
-    "as": "teacher1",
+    "x": 1400,
+    "y": 2605
+  },
+  {
+    "id": "W11",
+    "as": "academic",
+    "title": "本场名单导入",
+    "sub": "核对机构编号 · 导入应考名单",
+    "device": "desktop",
+    "phase": 1,
+    "f": "F01–F09",
     "x": 2070,
-    "y": 5065
+    "y": 2605
   },
   {
-    "id": "W25T",
-    "screen": "W25",
-    "title": "本人改分回执",
-    "sub": "回到原评分任务",
+    "id": "W12",
+    "as": "academic",
+    "title": "考场与排次",
+    "sub": "核对名单、人员与设备",
+    "device": "desktop",
+    "phase": 1,
+    "f": "F01–F09",
+    "x": 2740,
+    "y": 2605
+  },
+  {
+    "id": "W03",
+    "as": "academic",
+    "title": "整套试卷",
+    "sub": "缺科排除 · 本场版本",
+    "device": "desktop",
+    "phase": 1,
+    "f": "F01–F09",
+    "x": 60,
+    "y": 3195
+  },
+  {
+    "id": "U03A",
+    "as": "academic",
+    "title": "教务本场总览",
+    "sub": "准备与材料的整体进度",
+    "device": "desktop",
+    "phase": 1,
+    "f": "F01–F09",
+    "x": 730,
+    "y": 3195,
+    "screen": "U03"
+  },
+  {
+    "id": "W04",
+    "as": "academic",
+    "title": "材料清单与开放",
+    "sub": "按名单找齐本科材料",
+    "device": "desktop",
+    "phase": 1,
+    "f": "F01–F09",
+    "x": 1400,
+    "y": 3195
+  },
+  {
+    "id": "W14",
+    "as": "academic",
+    "title": "材料详情",
+    "sub": "原学员、原科、原视频版本",
+    "device": "desktop",
+    "phase": 1,
+    "f": "F01–F09",
+    "x": 2070,
+    "y": 3195
+  },
+  {
+    "id": "X01A",
+    "as": "academic",
+    "title": "材料问题与处理结果",
+    "sub": "登记后跟进 · 回原材料任务",
+    "device": "desktop",
+    "phase": 1,
+    "f": "F01–F09",
+    "x": 2740,
+    "y": 3195,
+    "screen": "X01"
+  },
+  {
+    "id": "W05",
+    "as": "teacher1",
+    "title": "我的评卷任务",
+    "sub": "只见分配给本人的科目",
     "device": "desktop",
     "phase": 2,
     "f": "F01–F09",
+    "x": 60,
+    "y": 3885
+  },
+  {
+    "id": "W16",
     "as": "teacher1",
+    "title": "本科任务队列",
+    "sub": "未评、草稿、已保存、问题",
+    "device": "desktop",
+    "phase": 2,
+    "f": "F01–F09",
+    "x": 730,
+    "y": 3885
+  },
+  {
+    "id": "W06",
+    "as": "teacher1",
+    "title": "看片评分",
+    "sub": "只提交本人原始分",
+    "device": "desktop",
+    "phase": 2,
+    "f": "F01–F09",
+    "x": 1400,
+    "y": 3885
+  },
+  {
+    "id": "W17",
+    "as": "teacher1",
+    "title": "本科完成与记录",
+    "sub": "确认保存 · 继续剩余任务",
+    "device": "desktop",
+    "phase": 2,
+    "f": "F01–F09",
+    "x": 2070,
+    "y": 3885
+  },
+  {
+    "id": "W05T2",
+    "as": "teacher2",
+    "title": "老师2独立任务",
+    "sub": "老师2本人数据与草稿",
+    "device": "desktop",
+    "phase": 2,
+    "f": "F01–F09",
     "x": 2740,
-    "y": 5065
+    "y": 3885,
+    "screen": "W05",
+    "sample": true
   },
   {
     "id": "X01T",
@@ -704,7 +377,86 @@ window.Catalog = [
     "f": "F01–F09",
     "as": "teacher1",
     "x": 60,
-    "y": 5655
+    "y": 4475
+  },
+  {
+    "id": "W24T",
+    "screen": "W24",
+    "title": "本人改分申请",
+    "sub": "提交、撤回与处理回执",
+    "device": "desktop",
+    "phase": 2,
+    "f": "F01–F09",
+    "as": "teacher1",
+    "x": 730,
+    "y": 4475
+  },
+  {
+    "id": "W25T",
+    "screen": "W25",
+    "title": "本人改分回执",
+    "sub": "回到原评分任务",
+    "device": "desktop",
+    "phase": 2,
+    "f": "F01–F09",
+    "as": "teacher1",
+    "x": 1400,
+    "y": 4475
+  },
+  {
+    "id": "M00",
+    "as": "invigilator",
+    "title": "我的监考任务",
+    "sub": "选择本人负责的考场",
+    "device": "mobile",
+    "phase": 3,
+    "f": "F01–F09",
+    "x": 60,
+    "y": 5165
+  },
+  {
+    "id": "M01",
+    "as": "invigilator",
+    "title": "本考场签到与候考",
+    "sub": "签到记录 · 名单筛选",
+    "device": "mobile",
+    "phase": 3,
+    "f": "F01–F09",
+    "x": 440,
+    "y": 5165
+  },
+  {
+    "id": "M03",
+    "as": "invigilator",
+    "title": "本考场签到码",
+    "sub": "只出码，不替学生确认",
+    "device": "mobile",
+    "phase": 3,
+    "f": "F01–F09",
+    "x": 820,
+    "y": 5165
+  },
+  {
+    "id": "M02",
+    "as": "invigilator",
+    "title": "学员核对详情",
+    "sub": "核对本人、签到与题套",
+    "device": "mobile",
+    "phase": 3,
+    "f": "F01–F09",
+    "x": 1200,
+    "y": 5165
+  },
+  {
+    "id": "M04",
+    "as": "invigilator",
+    "title": "学员交接状态",
+    "sub": "待场内接收 · 已接收 · 本位结束",
+    "device": "mobile",
+    "phase": 3,
+    "f": "F01–F09",
+    "x": 1580,
+    "y": 5165
   },
   {
     "id": "M05",
@@ -716,79 +468,112 @@ window.Catalog = [
     "f": "F01–F09",
     "as": "invigilator",
     "x": 1960,
-    "y": 6345
+    "y": 5165
   },
   {
     "id": "T01M",
     "screen": "T01",
-    "title": "监考岗位移交",
-    "sub": "发起与查询原单",
+    "title": "候选 · 临时更换工作人员",
+    "sub": "低频场景待确认 · 正常流程无需经过",
     "device": "mobile",
     "phase": 3,
     "f": "F01–F09",
     "as": "invigilator",
     "x": 2340,
-    "y": 6345
+    "y": 5165,
+    "kind": "candidate"
   },
   {
     "id": "T02M2",
     "screen": "T02",
-    "title": "监考乙接手",
-    "sub": "核对并接收岗位",
+    "title": "候选 · 工作人员更换记录",
+    "sub": "低频场景待确认 · 正常流程无需经过",
     "device": "mobile",
     "phase": 3,
     "f": "F01–F09",
     "as": "invigilator2",
     "x": 2720,
-    "y": 6345
+    "y": 5165,
+    "kind": "candidate"
   },
   {
     "id": "M00B",
     "screen": "M00",
     "title": "监考乙岗位任务",
-    "sub": "接手后的本场队列",
+    "sub": "候选换人场景的接手人员样例",
     "device": "mobile",
     "phase": 3,
     "f": "F01–F09",
     "as": "invigilator2",
-    "x": 60,
-    "y": 6935
+    "x": 3100,
+    "y": 5165,
+    "kind": "candidate"
   },
   {
-    "id": "T01R",
-    "screen": "T01",
-    "title": "录制岗位移交",
-    "sub": "当前人、同设备与原文件",
-    "device": "mobile",
-    "phase": 4,
-    "f": "F01–F09",
+    "id": "A00",
     "as": "recorder",
-    "x": 2340,
-    "y": 7625
-  },
-  {
-    "id": "T02R2",
-    "screen": "T02",
-    "title": "录制乙接手",
-    "sub": "核对未完任务与文件",
+    "title": "我的录制任务",
+    "sub": "本人设备与待传文件",
     "device": "mobile",
     "phase": 4,
     "f": "F01–F09",
-    "as": "recorder2",
-    "x": 2720,
-    "y": 7625
-  },
-  {
-    "id": "A00B",
-    "screen": "A00",
-    "title": "录制乙岗位任务",
-    "sub": "接手后检查设备并继续",
-    "device": "mobile",
-    "phase": 4,
-    "f": "F01–F09",
-    "as": "recorder2",
     "x": 60,
-    "y": 8215
+    "y": 5855
+  },
+  {
+    "id": "A01",
+    "as": "recorder",
+    "title": "开场设备检查",
+    "sub": "画面、收音与同屏",
+    "device": "mobile",
+    "phase": 4,
+    "f": "F01–F09",
+    "x": 440,
+    "y": 5855
+  },
+  {
+    "id": "A04",
+    "as": "recorder",
+    "title": "当前学员与三科进度",
+    "sub": "接收条件 · 本位完成结果",
+    "device": "mobile",
+    "phase": 4,
+    "f": "F01–F09",
+    "x": 820,
+    "y": 5855
+  },
+  {
+    "id": "A02",
+    "as": "recorder",
+    "title": "本科准备与录制",
+    "sub": "准备、作答、本地结果",
+    "device": "landscape",
+    "phase": 4,
+    "f": "F01–F09",
+    "x": 1200,
+    "y": 5855
+  },
+  {
+    "id": "A03",
+    "as": "recorder",
+    "title": "本机视频上传队列",
+    "sub": "逐文件状态与原文件重试",
+    "device": "mobile",
+    "phase": 4,
+    "f": "F01–F09",
+    "x": 1920,
+    "y": 5855
+  },
+  {
+    "id": "A05",
+    "as": "recorder",
+    "title": "原文件详情",
+    "sub": "原学员原科 · 保存与收到",
+    "device": "mobile",
+    "phase": 4,
+    "f": "F01–F09",
+    "x": 2300,
+    "y": 5855
   },
   {
     "id": "X01R",
@@ -799,8 +584,166 @@ window.Catalog = [
     "phase": 4,
     "f": "F01–F09",
     "as": "recorder",
+    "x": 2680,
+    "y": 5855
+  },
+  {
+    "id": "T01R",
+    "screen": "T01",
+    "title": "候选 · 临时更换工作人员",
+    "sub": "低频场景待确认 · 正常流程无需经过",
+    "device": "mobile",
+    "phase": 4,
+    "f": "F01–F09",
+    "as": "recorder",
+    "x": 3060,
+    "y": 5855,
+    "kind": "candidate"
+  },
+  {
+    "id": "T02R2",
+    "screen": "T02",
+    "title": "候选 · 工作人员更换记录",
+    "sub": "低频场景待确认 · 正常流程无需经过",
+    "device": "mobile",
+    "phase": 4,
+    "f": "F01–F09",
+    "as": "recorder2",
+    "x": 60,
+    "y": 6445,
+    "kind": "candidate"
+  },
+  {
+    "id": "A00B",
+    "screen": "A00",
+    "title": "录制乙岗位任务",
+    "sub": "候选换人场景的接手人员样例",
+    "device": "mobile",
+    "phase": 4,
+    "f": "F01–F09",
+    "as": "recorder2",
     "x": 440,
-    "y": 8215
+    "y": 6445,
+    "kind": "candidate"
+  },
+  {
+    "id": "S00",
+    "as": "studentA",
+    "title": "我的考试",
+    "sub": "本人考试列表",
+    "device": "mobile",
+    "phase": 5,
+    "f": "F01–F09",
+    "x": 60,
+    "y": 7135
+  },
+  {
+    "id": "S01",
+    "as": "studentA",
+    "title": "本场安排",
+    "sub": "考场排次与下一步",
+    "device": "mobile",
+    "phase": 5,
+    "f": "F01–F09",
+    "x": 440,
+    "y": 7135
+  },
+  {
+    "id": "S03",
+    "as": "studentA",
+    "title": "本人扫码核对",
+    "sub": "正确、错场、失效分支",
+    "device": "mobile",
+    "phase": 5,
+    "f": "F01–F09",
+    "x": 820,
+    "y": 7135,
+    "scan": "valid"
+  },
+  {
+    "id": "S04",
+    "as": "studentA",
+    "title": "本人签到结果",
+    "sub": "出示原记录 · 场外候考",
+    "device": "mobile",
+    "phase": 5,
+    "f": "F01–F09",
+    "x": 1200,
+    "y": 7135,
+    "fixture": "signed",
+    "sample": true
+  },
+  {
+    "id": "D01",
+    "as": "studentA",
+    "title": "本次抽题",
+    "sub": "一次结果 · 重复查询",
+    "device": "mobile",
+    "phase": 5,
+    "f": "F01–F09",
+    "x": 1580,
+    "y": 7135
+  },
+  {
+    "id": "S06",
+    "as": "studentA",
+    "title": "本人参加进度",
+    "sub": "签到、抽题、场内、发布",
+    "device": "mobile",
+    "phase": 5,
+    "f": "F01–F09",
+    "x": 1960,
+    "y": 7135
+  },
+  {
+    "id": "S05",
+    "as": "studentA",
+    "title": "本人成绩列表",
+    "sub": "本场与历次结果入口",
+    "device": "mobile",
+    "phase": 5,
+    "f": "F01–F09",
+    "x": 2340,
+    "y": 7135
+  },
+  {
+    "id": "S02",
+    "as": "studentA",
+    "title": "本次成绩",
+    "sub": "只读本人发布快照",
+    "device": "mobile",
+    "phase": 5,
+    "f": "F01–F09",
+    "x": 2720,
+    "y": 7135
+  },
+  {
+    "id": "S02U",
+    "as": "studentA",
+    "title": "成绩未发布",
+    "sub": "独立未发布样例",
+    "device": "mobile",
+    "phase": 5,
+    "f": "F01–F09",
+    "x": 3100,
+    "y": 7135,
+    "screen": "S02",
+    "fixture": "pending",
+    "sample": true
+  },
+  {
+    "id": "S02P",
+    "as": "studentA",
+    "title": "成绩已发布",
+    "sub": "独立已发布样例",
+    "device": "mobile",
+    "phase": 5,
+    "f": "F01–F09",
+    "x": 60,
+    "y": 7725,
+    "screen": "S02",
+    "fixture": "published",
+    "sample": true
   },
   {
     "id": "S00B",
@@ -811,8 +754,9 @@ window.Catalog = [
     "phase": 5,
     "f": "F01–F09",
     "as": "studentB",
-    "x": 820,
-    "y": 9495
+    "x": 440,
+    "y": 7725,
+    "sample": true
   },
   {
     "id": "S00C",
@@ -823,10 +767,13 @@ window.Catalog = [
     "phase": 5,
     "f": "F01–F09",
     "as": "studentC",
-    "x": 1200,
-    "y": 9495
+    "x": 820,
+    "y": 7725,
+    "sample": true
   }
 ];
-window.Phases=["管理员 · 本场统筹与闭环", "教务 · 多场准备与材料核对", "评卷老师 · 本人任务与改分回执", "监考 · 连续候考与岗位移交", "录制 · 本位接续、原文件与异常", "学生 · 本人各场考试与成绩"];
-window.CanvasRows=[{"top": 82, "text": "选择本场、岗位移交、例外与更正、核对发布"}, {"top": 2542, "text": "独立新场准备开放，接回材料核验"}, {"top": 4412, "text": "本人分科队列、问题恢复和改分回执"}, {"top": 6282, "text": "候考队列、下一位交接、现场例外与人员移交"}, {"top": 7562, "text": "当前人三科、原文件、异常处置与接手继续"}, {"top": 8842, "text": "本人各场签到、参加进度、实际发布与历次查询"}];
-window.CanvasSize={"width": 3440, "height": 10222};
+window.Phases=["管理员 · 本场统筹与发布", "教务 · 开场准备与考后材料", "评卷老师 · 本人科目与评分", "监考 · 候考与学员入场交接", "录制 · 当前学员与原文件", "学生 · 本人考试与成绩"];
+window.CanvasRows=[{"top": 82, "text": "常用：选场、总览、核对与发布；异常、改分和换人按需查看"}, {"top": 2542, "text": "准备时核对名单和套卷，考后核验材料；准备清单负责开场"}, {"top": 3822, "text": "本人科目 → 任务队列 → 评分 → 完成记录；有问题再登记"}, {"top": 5102, "text": "出示签到码、核对队首、交给录制员；本位结束后接下一位"}, {"top": 5792, "text": "设备检查、接收当前人、逐科保存、结束本位；文件随后上传"}, {"top": 7072, "text": "本人安排、扫码、签到回执、题套、参加进度、已发布成绩"}];
+window.CanvasSize={"width": 3440, "height": 8415};
+window.CatalogAliases={"U01": "U02", "U01A": "U02A", "U01T": "W05", "U01T2": "W05T2", "W02": "W12", "W15": "X01A", "W15T": "X01T"};
+window.CoreRoutes=[["U02", "U03", "W10", "W07", "W08", "W18"], ["U02A", "W01", "W11", "W12", "W03", "W04", "W14"], ["W05", "W16", "W06", "W17"], ["M00", "M01", "M03", "M02", "M04"], ["A00", "A01", "A04", "A02", "A03", "A05"], ["S00", "S01", "S03", "S04", "D01", "S06", "S05", "S02"]];
