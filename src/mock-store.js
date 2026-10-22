@@ -2,7 +2,8 @@
 (() => {
   const params = new URLSearchParams(location.search);
   const fixture = ['published','pending','signed'].includes(params.get('fixture')) ? params.get('fixture') : '';
-  const KEY = 'yifeng.frontend.github.v04' + (fixture ? ':' + fixture : '');
+  const walk=['academic','student','invigilator','recorder','teacher','admin'].includes(params.get('walk'))?params.get('walk'):'';
+  const KEY = 'yifeng.frontend.github.v04' + (walk ? ':walk:'+walk : fixture ? ':' + fixture : '');
   const subjects = ['作品朗读','新闻播报','话题评述'];
   const students = [
     {id:'A',name:'示例学员A',code:'YF-001',class:'示例一班'},
@@ -35,8 +36,43 @@
     if(preset==='incident'){const f=fullFile(e,'A',0);Object.assign(f,{abnormal:true,upload:'none',checked:false});e.records.A.files[0]=f;e.records.A.stage='interrupted';e.exceptions.push({id:'CASE-1',type:'retake',person:'A',q:0,fileId:f.id,reason:'麦克风中断，原片段已保留',status:'pending',by:'recorder',createdAt:stamp(),messages:[]});}
     return {version:4,seq:20,examSeq:2,exams:{EX1:e,EXH:history},staff:{staff1:{id:'staff1',name:'工作人员甲',active:true},staff2:{id:'staff2',name:'工作人员乙',active:true}},faults:{offline:false,saveFail:false,networkFail:false,permission:false}};
   }
+  function walkSeed(role){
+    const d=seed(role==='teacher'?'post':['student','invigilator','recorder','admin'].includes(role)?'queue':'start'),e=d.exams.EX1;
+    d.exams={EX1:e};e.name='正常流程体验 · 模拟考';
+    if(role!=='academic'){
+      const ids=role==='invigilator'?['A','B']:['A'];e.roster=ids;e.queue=[...ids];e.records=Object.fromEntries(ids.map((p,i)=>[p,e.records[p]||record(p,String(i+1).padStart(2,'0'))]));
+      e.scores=Object.fromEntries(Object.entries(e.scores).filter(([k])=>ids.includes(k.split('-')[2])));
+    }
+    if(role==='student'||role==='invigilator'){e.records.A=record('A','01');}
+    if(role==='recorder'){e.current='A';e.records.A.handoff='pending';e.status='live';e.deviceChecked=false;}
+    if(role==='admin'){e.status='draft';e.records.A=record('A','01');}
+    if(role==='teacher'){e.assignments=[[0,1],[1],[1]];delete e.scores['0-0-A'];}
+    d.walkRole=role;return d;
+  }
+  function completeWalkSample(e,graded=false,published=false){
+    if(!e.roster.length)throw Error('请先完成本场名单。');
+    e.status='live';e.current=null;e.deviceChecked=true;e.opened=[graded,graded,graded];e.scores={};e.drafts={};e.publications=[];
+    for(const p of e.roster){const r=e.records[p];Object.assign(r,{checkin:true,checkinAt:r.checkinAt||stamp(),draw:17,drawPending:false,handoff:'accepted',onsiteEnded:true,subject:2,stage:'done'});r.files=subjects.map((_,q)=>({...fullFile(e,p,q,1,e.staff.recorder),checked:graded}));
+      if(graded)for(let q=0;q<3;q++)for(const t of e.assignments[q])e.scores[key(q,t,p)]={value:86+q+t,videoVersion:1,revision:1,updatedAt:stamp()};
+    }
+    e.scoreRev++;if(published)e.publications=[snapshot(e)];
+  }
+  function advanceWalk(action,examId='EX1'){
+    if(!walk)return {ok:false,message:'仅在独立角色体验中接续虚构样例。'};
+    const d=read(),e=d.exams[examId];if(!e)return {ok:false,message:'请先选择本场。'};
+    try{
+      if(action==='materials'&&walk==='academic'){if(e.status==='draft')throw Error('请先由教务开放本场。');completeWalkSample(e);}
+      else if(action==='graded'&&walk==='admin')completeWalkSample(e,true);
+      else if(action==='published'&&walk==='student')completeWalkSample(e,true,true);
+      else if(action==='arrival'&&walk==='invigilator'){const r=e.records[e.roster[0]];Object.assign(r,{checkin:true,checkinAt:stamp(),draw:17,drawPending:false});}
+      else if(action==='receive'&&walk==='invigilator'){const r=e.records[e.current];if(!r||r.handoff!=='pending')throw Error('先完成学员核对并发出交接。');r.handoff='accepted';}
+      else if(action==='onsite-end'&&walk==='invigilator'){const r=e.records[e.current];if(!r||r.handoff!=='accepted')throw Error('先查看录制员接收后的状态。');Object.assign(r,{onsiteEnded:true,stage:'done',subject:2});r.files=subjects.map((_,q)=>({...fullFile(e,r.id,q,1,e.staff.recorder),upload:'queued',checked:false}));e.lastEnded=r.id;e.current=null;}
+      else throw Error('当前角色没有这一段体验接续。');
+      write(d);return {ok:true,message:'已接续其他岗位完成后的虚构样例。'};
+    }catch(error){return {ok:false,message:error.message};}
+  }
   let memory=null,storageError=false;
-  function read(){if(storageError&&memory)return memory;try{const d=JSON.parse(localStorage.getItem(KEY));return d?.version===4?d:seed(fixture||'start');}catch{return memory||seed(fixture||'start');}}
+  function read(){if(storageError&&memory)return memory;try{const d=JSON.parse(localStorage.getItem(KEY));return d?.version===4?d:walk?walkSeed(walk):seed(fixture||'start');}catch{return memory||(walk?walkSeed(walk):seed(fixture||'start'));}}
   const listeners=new Set();
   function notify(announce=true){listeners.forEach(fn=>fn());if(announce&&parent!==window)parent.postMessage({type:'yf-state'},'*');}
   function write(d){memory=d;try{localStorage.setItem(KEY,JSON.stringify(d));storageError=false;}catch{storageError=true;}notify();}
@@ -141,5 +177,6 @@
   }
   addEventListener('storage',ev=>{if(ev.key===KEY)notify(false);});
   addEventListener('message',ev=>{if(ev.data?.type==='yf-refresh')listeners.forEach(fn=>fn());});
-  window.YF={KEY,fixture,subjects,students,view,run,reset,seed,edit,subscribe:fn=>listeners.add(fn),get state(){const d=read();return {...d,...d.faults};},prepIssues:(examId)=>prepIssues(read().exams[examId],read()),publishIssues:(examId)=>publishIssues(read().exams[examId]),mean:(examId,q,p)=>mean(read().exams[examId],q,p),snapshot};
+  window.YF={KEY,fixture,walk,advanceWalk,subjects,students,view,run,reset,seed,edit,subscribe:fn=>listeners.add(fn),get state(){const d=read();return {...d,...d.faults};},prepIssues:(examId)=>prepIssues(read().exams[examId],read()),publishIssues:(examId)=>publishIssues(read().exams[examId]),mean:(examId,q,p)=>mean(read().exams[examId],q,p),snapshot};
+  if(walk){try{if(params.get('walkReset')==='1'||!localStorage.getItem(KEY))write(walkSeed(walk));}catch{write(walkSeed(walk));}if(params.has('walkReset')){const u=new URL(location.href);u.searchParams.delete('walkReset');history.replaceState(null,'',u);}}
 })();

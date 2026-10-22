@@ -669,9 +669,7 @@ window.Catalog=[
     "phase": 5,
     "f": "F01–F09",
     "x": 1200,
-    "y": 7135,
-    "fixture": "signed",
-    "sample": true
+    "y": 7135
   },
   {
     "id": "D01",
