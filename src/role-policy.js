@@ -23,7 +23,7 @@
   function actionAllowed(id, action) {
     const a=get(id), group=a.group;
     if (['close-dialog','permission-back'].includes(action)) return true;
-    if (action.startsWith('flow:')) { const key=action.split(':')[1];return ({'assignment-save':['admin'],'mapping-save':['academic','admin'],'resolve-issue':['academic','admin'],'queue-filter':['teacher'],'choose-grade':['teacher'],'material-select':['academic','admin'],'monitor-person':['invigilator'],'receipt-query':['invigilator'],'file-select':['recorder'],'resume-subject':['recorder'],'query-upload':['recorder'],'query-local-save':['recorder']}[key]||[]).includes(group); }
+    if (action.startsWith('flow:')) { const key=action.split(':')[1];return ({'incident-update':['admin'],'assignment-save':['admin'],'mapping-save':['academic','admin'],'resolve-issue':['academic','admin'],'queue-filter':['teacher'],'choose-grade':['teacher'],'material-select':['academic','admin'],'monitor-person':['invigilator'],'receipt-query':['invigilator'],'file-select':['recorder'],'resume-subject':['recorder'],'query-upload':['recorder'],'query-local-save':['recorder']}[key]||[]).includes(group); }
     if (action.startsWith('go:')||action.startsWith('leave:')) return canOpen(id,action.split(':')[1]);
     if (action.startsWith('post:')) return ['invigilator','recorder'].includes(group);
     if (action.startsWith('edit-draft:')||action.startsWith('paper-tab:')||action.startsWith('material-tab:')) return ['academic','admin'].includes(group);

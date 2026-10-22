@@ -15,13 +15,13 @@
     local:[false,false,false],upload:['none','none','none'],checked:[false,false,false],opened:[false,false,false],
     scores:{},
     drafts:{},scoreIssue:{},published:false,publishVersion:0,scoreRev:1,reviewRev:0,teacherViews:{teacher1:{scoreSub:0,student:'A'},teacher2:{scoreSub:0,student:'A'}},
-    offline:false,saveFail:false,networkFail:false,permission:false,materialSub:0,accountActive:true,roleMonitor:true,roleRecord:true,scope:'第一轮 / 03考场',accountRevision:1,examDrafts:[],assignments:[[0,1],[0,1],[0,1]],assignmentRevision:1,publications:[],importMapped:false});
+    offline:false,saveFail:false,networkFail:false,permission:false,materialSub:0,accountActive:true,roleMonitor:true,roleRecord:true,scope:'第一轮 / 03考场',accountRevision:1,examDrafts:[],assignments:[[0,1],[0,1],[0,1]],assignmentRevision:1,publications:[],importMapped:false,incidents:{},prepSaved:false});
   const average = (data,q,p='A') => {
     const a=data.assignments[q].map(t=>data.scores[`${q}-${t}-${p}`]);
     return a.every(Number.isFinite) ? (a.reduce((n,v)=>n+v,0)/a.length).toFixed(2) : null;
   };
   function snapshot(data) {
-    return {version:data.publishVersion,examName:data.examName,date:data.date,publishedAt:'2026-10-22 10:36',
+    return {version:data.publishVersion,scoreRev:data.scoreRev,examName:data.examName,date:data.date,publishedAt:'2026-10-22 10:36',
       results:Object.fromEntries(students.map(p=>[p.id,subjects.map((_,q)=>average(data,q,p.id))]))};
   }
   function seed(preset='start') {
@@ -39,7 +39,7 @@
     if(preset==='signed') Object.assign(data,{checkin:true,checkinAt:'10:24',checkinCount:1});
     return data;
   }
-  function read(){try{const saved=JSON.parse(localStorage.getItem(KEY));return saved?.version===3?saved:seed(fixtureName||'start')}catch{return seed(fixtureName||'start')}}
+  function read(){try{const saved=JSON.parse(localStorage.getItem(KEY));return saved?.version===3?{...initial(),...saved}:seed(fixtureName||'start')}catch{return seed(fixtureName||'start')}}
   let state=read();
   const listeners=new Set();
   const emit=()=>listeners.forEach(fn=>fn());
@@ -53,7 +53,7 @@
     result.actor=actor.id;result.actorGroup=group;
     if(group==='admin') return {...structuredClone(data),actor:actor.id,actorGroup:group,people:structuredClone(students)};
     if(group==='academic') {
-      for(const k of ['roster','identity','paper18','papersSelected','assigned','prepared','device','local','upload','checked','opened','materialSub','examDrafts','assignments','assignmentRevision','scoreIssue','importMapped']) result[k]=structuredClone(data[k]);
+      for(const k of ['incidents','prepSaved','roster','identity','paper18','papersSelected','assigned','prepared','device','local','upload','checked','opened','materialSub','examDrafts','assignments','assignmentRevision','scoreIssue','importMapped']) result[k]=structuredClone(data[k]);
       result.people=structuredClone(students);return result;
     }
     if(group==='teacher') {
@@ -68,11 +68,11 @@
     if(group==='invigilator'||group==='recorder') {
       for(const k of ['accountActive','roleMonitor','roleRecord','scope','accountRevision'])result[k]=structuredClone(data[k]);
       if(!data.accountActive||data.scope!=='第一轮 / 03考场'||(group==='invigilator'?!data.roleMonitor:!data.roleRecord)){result.people=[];return result;}
-      for(const k of ['checkin','checkinAt','draw','handoff','onsiteEnded']) result[k]=structuredClone(data[k]);
+      for(const k of ['checkin','checkinAt','draw','drawPending','handoff','onsiteEnded']) result[k]=structuredClone(data[k]);
       if(group==='invigilator') result.people=structuredClone(students);
       else {
         result.people=[structuredClone(students[0])];
-        for(const k of ['device','stage','subject','started','local','upload','checked','abnormal','interruptReason']) if(data[k]!==undefined)result[k]=structuredClone(data[k]);
+        for(const k of ['device','stage','subject','started','local','upload','checked','abnormal','interruptReason','incidents']) if(data[k]!==undefined)result[k]=structuredClone(data[k]);
       }
       return result;
     }
@@ -86,10 +86,10 @@
     return {actor:'unknown',actorGroup:'unknown',people:[]};
   }
   const fields={
-    admin:['examName','date','roster','identity','paper18','papersSelected','assigned','prepared','checked','opened','published','publishVersion','publication','reviewRev','materialSub','accountActive','roleMonitor','roleRecord','scope','accountRevision','examDrafts','assignments','assignmentRevision','scoreIssue','importMapped'],
-    academic:['examName','date','roster','identity','paper18','papersSelected','assigned','prepared','checked','opened','materialSub','examDrafts','scoreIssue','importMapped'],
+    admin:['incidents','prepSaved','examName','date','roster','identity','paper18','papersSelected','assigned','prepared','checked','opened','published','publishVersion','publication','reviewRev','materialSub','accountActive','roleMonitor','roleRecord','scope','accountRevision','examDrafts','assignments','assignmentRevision','scoreIssue','importMapped'],
+    academic:['prepSaved','examName','date','roster','identity','paper18','papersSelected','assigned','prepared','checked','opened','materialSub','examDrafts','scoreIssue','importMapped'],
     invigilator:['handoff'],
-    recorder:['device','stage','subject','started','local','upload','abnormal','interruptReason','handoff','onsiteEnded'],
+    recorder:['incidents','device','stage','subject','started','local','upload','abnormal','interruptReason','handoff','onsiteEnded'],
     student:['checkin','checkinAt','checkinCount','draw','drawPending']
   };
   function editAs(actorId,fn){
@@ -111,7 +111,7 @@
   const readyPublish=()=>{state=read();return [0,1,2].every(q=>complete(q)&&state.opened[q]&&state.checked[q]&&state.upload[q]==='received')&&!Object.values(state.scoreIssue).some(v=>v&&v.status!=='resolved')};
   function publish(actorId,expectedRev){
     if(RolePolicy.get(actorId).group!=='admin')return {ok:false,reason:'只有管理员可以发布全场成绩。'};
-    state=read();if(!readyPublish()||state.scoreRev!==expectedRev)return {ok:false,reason:'评分或材料发生变化，请重新核对。'};
+    state=read();if(state.published&&(state.publication?.scoreRev===state.scoreRev||state.publication?.scoreRev===undefined&&!state.resultChanged&&state.reviewRev===state.scoreRev)&&state.scoreRev===expectedRev)return {ok:true,duplicate:true,version:state.publishVersion};if(!readyPublish()||state.scoreRev!==expectedRev)return {ok:false,reason:'评分或材料发生变化，请重新核对。'};
     edit(data=>{data.published=true;data.publishVersion++;data.publication=snapshot(data);data.publications.push(structuredClone(data.publication));data.reviewRev=data.scoreRev;data.resultChanged=false});return {ok:true};
   }
   addEventListener('storage',e=>{if(e.key===KEY){state=read();emit()}});
