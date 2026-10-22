@@ -118,7 +118,7 @@ window.Catalog = [
     "phase": 1,
     "f": "F01–F09",
     "x": 60,
-    "y": 1425,
+    "y": 2605,
     "screen": "U01"
   },
   {
@@ -130,7 +130,7 @@ window.Catalog = [
     "phase": 1,
     "f": "F01–F09",
     "x": 730,
-    "y": 1425,
+    "y": 2605,
     "screen": "U02"
   },
   {
@@ -142,7 +142,7 @@ window.Catalog = [
     "phase": 1,
     "f": "F01–F09",
     "x": 1400,
-    "y": 1425,
+    "y": 2605,
     "screen": "U03"
   },
   {
@@ -154,7 +154,7 @@ window.Catalog = [
     "phase": 1,
     "f": "F01–F09",
     "x": 2070,
-    "y": 1425
+    "y": 2605
   },
   {
     "id": "W11",
@@ -165,7 +165,7 @@ window.Catalog = [
     "phase": 1,
     "f": "F01–F09",
     "x": 2740,
-    "y": 1425
+    "y": 2605
   },
   {
     "id": "W02",
@@ -176,7 +176,7 @@ window.Catalog = [
     "phase": 1,
     "f": "F01–F09",
     "x": 60,
-    "y": 2015
+    "y": 3195
   },
   {
     "id": "W12",
@@ -187,7 +187,7 @@ window.Catalog = [
     "phase": 1,
     "f": "F01–F09",
     "x": 730,
-    "y": 2015
+    "y": 3195
   },
   {
     "id": "W03",
@@ -198,7 +198,7 @@ window.Catalog = [
     "phase": 1,
     "f": "F01–F09",
     "x": 1400,
-    "y": 2015
+    "y": 3195
   },
   {
     "id": "W04",
@@ -209,7 +209,7 @@ window.Catalog = [
     "phase": 1,
     "f": "F01–F09",
     "x": 2070,
-    "y": 2015
+    "y": 3195
   },
   {
     "id": "W14",
@@ -220,7 +220,7 @@ window.Catalog = [
     "phase": 1,
     "f": "F01–F09",
     "x": 2740,
-    "y": 2015
+    "y": 3195
   },
   {
     "id": "W15",
@@ -231,7 +231,7 @@ window.Catalog = [
     "phase": 1,
     "f": "F01–F09",
     "x": 60,
-    "y": 2605
+    "y": 3785
   },
   {
     "id": "U01T",
@@ -242,7 +242,7 @@ window.Catalog = [
     "phase": 2,
     "f": "F01–F09",
     "x": 60,
-    "y": 3295,
+    "y": 4475,
     "screen": "U01"
   },
   {
@@ -254,7 +254,7 @@ window.Catalog = [
     "phase": 2,
     "f": "F01–F09",
     "x": 730,
-    "y": 3295
+    "y": 4475
   },
   {
     "id": "W16",
@@ -265,7 +265,7 @@ window.Catalog = [
     "phase": 2,
     "f": "F01–F09",
     "x": 1400,
-    "y": 3295
+    "y": 4475
   },
   {
     "id": "W06",
@@ -276,7 +276,7 @@ window.Catalog = [
     "phase": 2,
     "f": "F01–F09",
     "x": 2070,
-    "y": 3295
+    "y": 4475
   },
   {
     "id": "W17",
@@ -287,7 +287,7 @@ window.Catalog = [
     "phase": 2,
     "f": "F01–F09",
     "x": 2740,
-    "y": 3295
+    "y": 4475
   },
   {
     "id": "W15T",
@@ -298,7 +298,7 @@ window.Catalog = [
     "phase": 2,
     "f": "F01–F09",
     "x": 60,
-    "y": 3885,
+    "y": 5065,
     "screen": "W15"
   },
   {
@@ -310,7 +310,7 @@ window.Catalog = [
     "phase": 2,
     "f": "F01–F09",
     "x": 730,
-    "y": 3885,
+    "y": 5065,
     "screen": "U01"
   },
   {
@@ -322,7 +322,7 @@ window.Catalog = [
     "phase": 2,
     "f": "F01–F09",
     "x": 1400,
-    "y": 3885,
+    "y": 5065,
     "screen": "W05"
   },
   {
@@ -334,7 +334,7 @@ window.Catalog = [
     "phase": 3,
     "f": "F01–F09",
     "x": 60,
-    "y": 4575
+    "y": 6345
   },
   {
     "id": "M01",
@@ -345,7 +345,7 @@ window.Catalog = [
     "phase": 3,
     "f": "F01–F09",
     "x": 440,
-    "y": 4575
+    "y": 6345
   },
   {
     "id": "M03",
@@ -356,7 +356,7 @@ window.Catalog = [
     "phase": 3,
     "f": "F01–F09",
     "x": 820,
-    "y": 4575
+    "y": 6345
   },
   {
     "id": "M02",
@@ -367,7 +367,7 @@ window.Catalog = [
     "phase": 3,
     "f": "F01–F09",
     "x": 1200,
-    "y": 4575
+    "y": 6345
   },
   {
     "id": "M04",
@@ -378,7 +378,7 @@ window.Catalog = [
     "phase": 3,
     "f": "F01–F09",
     "x": 1580,
-    "y": 4575
+    "y": 6345
   },
   {
     "id": "A00",
@@ -389,7 +389,7 @@ window.Catalog = [
     "phase": 4,
     "f": "F01–F09",
     "x": 60,
-    "y": 5265
+    "y": 7625
   },
   {
     "id": "A01",
@@ -399,8 +399,8 @@ window.Catalog = [
     "device": "mobile",
     "phase": 4,
     "f": "F01–F09",
-    "x": 730,
-    "y": 5265
+    "x": 440,
+    "y": 7625
   },
   {
     "id": "A04",
@@ -410,8 +410,8 @@ window.Catalog = [
     "device": "mobile",
     "phase": 4,
     "f": "F01–F09",
-    "x": 1400,
-    "y": 5265
+    "x": 820,
+    "y": 7625
   },
   {
     "id": "A02",
@@ -421,8 +421,8 @@ window.Catalog = [
     "device": "landscape",
     "phase": 4,
     "f": "F01–F09",
-    "x": 2070,
-    "y": 5265
+    "x": 1200,
+    "y": 7625
   },
   {
     "id": "A03",
@@ -432,8 +432,8 @@ window.Catalog = [
     "device": "mobile",
     "phase": 4,
     "f": "F01–F09",
-    "x": 2740,
-    "y": 5265
+    "x": 1580,
+    "y": 7625
   },
   {
     "id": "A05",
@@ -443,8 +443,8 @@ window.Catalog = [
     "device": "mobile",
     "phase": 4,
     "f": "F01–F09",
-    "x": 60,
-    "y": 5855
+    "x": 1960,
+    "y": 7625
   },
   {
     "id": "S00",
@@ -455,7 +455,7 @@ window.Catalog = [
     "phase": 5,
     "f": "F01–F09",
     "x": 60,
-    "y": 6545
+    "y": 8905
   },
   {
     "id": "S01",
@@ -466,7 +466,7 @@ window.Catalog = [
     "phase": 5,
     "f": "F01–F09",
     "x": 440,
-    "y": 6545
+    "y": 8905
   },
   {
     "id": "S03",
@@ -477,7 +477,7 @@ window.Catalog = [
     "phase": 5,
     "f": "F01–F09",
     "x": 820,
-    "y": 6545,
+    "y": 8905,
     "scan": "valid"
   },
   {
@@ -489,7 +489,7 @@ window.Catalog = [
     "phase": 5,
     "f": "F01–F09",
     "x": 1200,
-    "y": 6545,
+    "y": 8905,
     "fixture": "signed"
   },
   {
@@ -501,7 +501,7 @@ window.Catalog = [
     "phase": 5,
     "f": "F01–F09",
     "x": 1580,
-    "y": 6545
+    "y": 8905
   },
   {
     "id": "S06",
@@ -512,7 +512,7 @@ window.Catalog = [
     "phase": 5,
     "f": "F01–F09",
     "x": 1960,
-    "y": 6545
+    "y": 8905
   },
   {
     "id": "S05",
@@ -523,7 +523,7 @@ window.Catalog = [
     "phase": 5,
     "f": "F01–F09",
     "x": 2340,
-    "y": 6545
+    "y": 8905
   },
   {
     "id": "S02",
@@ -534,7 +534,7 @@ window.Catalog = [
     "phase": 5,
     "f": "F01–F09",
     "x": 2720,
-    "y": 6545
+    "y": 8905
   },
   {
     "id": "S02U",
@@ -545,7 +545,7 @@ window.Catalog = [
     "phase": 5,
     "f": "F01–F09",
     "x": 60,
-    "y": 7135,
+    "y": 9495,
     "screen": "S02",
     "fixture": "pending"
   },
@@ -558,11 +558,275 @@ window.Catalog = [
     "phase": 5,
     "f": "F01–F09",
     "x": 440,
-    "y": 7135,
+    "y": 9495,
     "screen": "S02",
     "fixture": "published"
+  },
+  {
+    "id": "U04",
+    "screen": "U04",
+    "title": "新建考试",
+    "sub": "独立场次与配置参考",
+    "device": "desktop",
+    "phase": 0,
+    "f": "F01–F09",
+    "as": "admin",
+    "x": 60,
+    "y": 1325
+  },
+  {
+    "id": "T01",
+    "screen": "T01",
+    "title": "本场人员移交",
+    "sub": "发起、待接收、回执",
+    "device": "desktop",
+    "phase": 0,
+    "f": "F01–F09",
+    "as": "admin",
+    "x": 730,
+    "y": 1325
+  },
+  {
+    "id": "T02",
+    "screen": "T02",
+    "title": "移交单详情",
+    "sub": "当前人、设备、原文件",
+    "device": "desktop",
+    "phase": 0,
+    "f": "F01–F09",
+    "as": "admin",
+    "x": 1400,
+    "y": 1325
+  },
+  {
+    "id": "X01",
+    "screen": "X01",
+    "title": "异常处置待办",
+    "sub": "补录、视频与现场例外",
+    "device": "desktop",
+    "phase": 0,
+    "f": "F01–F09",
+    "as": "admin",
+    "x": 2070,
+    "y": 1325
+  },
+  {
+    "id": "X02",
+    "screen": "X02",
+    "title": "异常决定与回执",
+    "sub": "明确演示假设与下一岗位",
+    "device": "desktop",
+    "phase": 0,
+    "f": "F01–F09",
+    "as": "admin",
+    "x": 2740,
+    "y": 1325
+  },
+  {
+    "id": "W24",
+    "screen": "W24",
+    "title": "改分申请",
+    "sub": "原分数、原因、处理",
+    "device": "desktop",
+    "phase": 0,
+    "f": "F01–F09",
+    "as": "admin",
+    "x": 60,
+    "y": 1915
+  },
+  {
+    "id": "W25",
+    "screen": "W25",
+    "title": "改分处理详情",
+    "sub": "审批假设与版本核对",
+    "device": "desktop",
+    "phase": 0,
+    "f": "F01–F09",
+    "as": "admin",
+    "x": 730,
+    "y": 1915
+  },
+  {
+    "id": "W26",
+    "screen": "W26",
+    "title": "原分数审计",
+    "sub": "旧分数与变更原因",
+    "device": "desktop",
+    "phase": 0,
+    "f": "F01–F09",
+    "as": "admin",
+    "x": 1400,
+    "y": 1915
+  },
+  {
+    "id": "U04A",
+    "screen": "U04",
+    "title": "教务新建考试",
+    "sub": "从草稿到本场开放",
+    "device": "desktop",
+    "phase": 1,
+    "f": "F01–F09",
+    "as": "academic",
+    "x": 730,
+    "y": 3785
+  },
+  {
+    "id": "W24T",
+    "screen": "W24",
+    "title": "本人改分申请",
+    "sub": "提交、撤回与处理回执",
+    "device": "desktop",
+    "phase": 2,
+    "f": "F01–F09",
+    "as": "teacher1",
+    "x": 2070,
+    "y": 5065
+  },
+  {
+    "id": "W25T",
+    "screen": "W25",
+    "title": "本人改分回执",
+    "sub": "回到原评分任务",
+    "device": "desktop",
+    "phase": 2,
+    "f": "F01–F09",
+    "as": "teacher1",
+    "x": 2740,
+    "y": 5065
+  },
+  {
+    "id": "X01T",
+    "screen": "X01",
+    "title": "本人材料问题",
+    "sub": "原视频处理后继续评分",
+    "device": "desktop",
+    "phase": 2,
+    "f": "F01–F09",
+    "as": "teacher1",
+    "x": 60,
+    "y": 5655
+  },
+  {
+    "id": "M05",
+    "screen": "M05",
+    "title": "现场例外申请",
+    "sub": "过号、缺考、重抽与恢复",
+    "device": "mobile",
+    "phase": 3,
+    "f": "F01–F09",
+    "as": "invigilator",
+    "x": 1960,
+    "y": 6345
+  },
+  {
+    "id": "T01M",
+    "screen": "T01",
+    "title": "监考岗位移交",
+    "sub": "发起与查询原单",
+    "device": "mobile",
+    "phase": 3,
+    "f": "F01–F09",
+    "as": "invigilator",
+    "x": 2340,
+    "y": 6345
+  },
+  {
+    "id": "T02M2",
+    "screen": "T02",
+    "title": "监考乙接手",
+    "sub": "核对并接收岗位",
+    "device": "mobile",
+    "phase": 3,
+    "f": "F01–F09",
+    "as": "invigilator2",
+    "x": 2720,
+    "y": 6345
+  },
+  {
+    "id": "M00B",
+    "screen": "M00",
+    "title": "监考乙岗位任务",
+    "sub": "接手后的本场队列",
+    "device": "mobile",
+    "phase": 3,
+    "f": "F01–F09",
+    "as": "invigilator2",
+    "x": 60,
+    "y": 6935
+  },
+  {
+    "id": "T01R",
+    "screen": "T01",
+    "title": "录制岗位移交",
+    "sub": "当前人、同设备与原文件",
+    "device": "mobile",
+    "phase": 4,
+    "f": "F01–F09",
+    "as": "recorder",
+    "x": 2340,
+    "y": 7625
+  },
+  {
+    "id": "T02R2",
+    "screen": "T02",
+    "title": "录制乙接手",
+    "sub": "核对未完任务与文件",
+    "device": "mobile",
+    "phase": 4,
+    "f": "F01–F09",
+    "as": "recorder2",
+    "x": 2720,
+    "y": 7625
+  },
+  {
+    "id": "A00B",
+    "screen": "A00",
+    "title": "录制乙岗位任务",
+    "sub": "接手后检查设备并继续",
+    "device": "mobile",
+    "phase": 4,
+    "f": "F01–F09",
+    "as": "recorder2",
+    "x": 60,
+    "y": 8215
+  },
+  {
+    "id": "X01R",
+    "screen": "X01",
+    "title": "录制异常回执",
+    "sub": "原片段保留与补录接续",
+    "device": "mobile",
+    "phase": 4,
+    "f": "F01–F09",
+    "as": "recorder",
+    "x": 440,
+    "y": 8215
+  },
+  {
+    "id": "S00B",
+    "screen": "S00",
+    "title": "学生B的考试",
+    "sub": "下一位本人签到与成绩",
+    "device": "mobile",
+    "phase": 5,
+    "f": "F01–F09",
+    "as": "studentB",
+    "x": 820,
+    "y": 9495
+  },
+  {
+    "id": "S00C",
+    "screen": "S00",
+    "title": "学生C的考试",
+    "sub": "独立本人范围",
+    "device": "mobile",
+    "phase": 5,
+    "f": "F01–F09",
+    "as": "studentC",
+    "x": 1200,
+    "y": 9495
   }
 ];
-window.Phases=["管理员 · 全场统筹与发布", "教务 · 考前准备与材料交接", "评卷老师 · 本人任务到完成", "监考 · 本考场签到与交接", "录制 · 接收、逐科保存与文件处理", "学生 · 本人考试、签到与成绩"];
-window.CanvasRows=[{"top": 82, "text": "从考试总览定位任务，查看分工、整体评分与发布记录"}, {"top": 1362, "text": "从名单导入到安排、题套，再接回现场材料与视频问题"}, {"top": 3232, "text": "本人负责科目 → 本科全部学员 → 保存与问题恢复 → 完成记录"}, {"top": 4512, "text": "本人岗位任务 → 考场名单 → 学员核对 → 发出交接 → 查询回执"}, {"top": 5202, "text": "设备任务 → 检查 → 本位学员 → 三科录制 → 现场完成 → 原文件上传"}, {"top": 6482, "text": "我的考试 → 本场安排 → 本人扫码 → 结果与抽题 → 参加进度 → 本人成绩"}];
-window.CanvasSize={width:3440,height:7825};
+window.Phases=["管理员 · 本场统筹与闭环", "教务 · 多场准备与材料核对", "评卷老师 · 本人任务与改分回执", "监考 · 连续候考与岗位移交", "录制 · 本位接续、原文件与异常", "学生 · 本人各场考试与成绩"];
+window.CanvasRows=[{"top": 82, "text": "选择本场、岗位移交、例外与更正、核对发布"}, {"top": 2542, "text": "独立新场准备开放，接回材料核验"}, {"top": 4412, "text": "本人分科队列、问题恢复和改分回执"}, {"top": 6282, "text": "候考队列、下一位交接、现场例外与人员移交"}, {"top": 7562, "text": "当前人三科、原文件、异常处置与接手继续"}, {"top": 8842, "text": "本人各场签到、参加进度、实际发布与历次查询"}];
+window.CanvasSize={"width": 3440, "height": 10222};
