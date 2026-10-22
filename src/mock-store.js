@@ -38,7 +38,7 @@
   let memory=null,storageError=false;
   function read(){if(storageError&&memory)return memory;try{const d=JSON.parse(localStorage.getItem(KEY));return d?.version===4?d:seed(fixture||'start');}catch{return memory||seed(fixture||'start');}}
   const listeners=new Set();
-  function notify(){listeners.forEach(fn=>fn());if(parent!==window)parent.postMessage({type:'yf-state'},'*');}
+  function notify(announce=true){listeners.forEach(fn=>fn());if(announce&&parent!==window)parent.postMessage({type:'yf-state'},'*');}
   function write(d){memory=d;try{localStorage.setItem(KEY,JSON.stringify(d));storageError=false;}catch{storageError=true;}notify();}
   function edit(fn){const d=read();const temp={...d.faults};fn(temp);for(const k of Object.keys(d.faults))d.faults[k]=!!temp[k];write(d);}
   function reset(preset='start'){write(seed(preset));}
@@ -139,7 +139,7 @@
       log(message);write(d);return {ok:true,message,target,examId:e.id};
     }catch(error){return {ok:false,message:error.message};}
   }
-  addEventListener('storage',ev=>{if(ev.key===KEY)notify();});
+  addEventListener('storage',ev=>{if(ev.key===KEY)notify(false);});
   addEventListener('message',ev=>{if(ev.data?.type==='yf-refresh')listeners.forEach(fn=>fn());});
   window.YF={KEY,fixture,subjects,students,view,run,reset,seed,edit,subscribe:fn=>listeners.add(fn),get state(){const d=read();return {...d,...d.faults};},prepIssues:(examId)=>prepIssues(read().exams[examId],read()),publishIssues:(examId)=>publishIssues(read().exams[examId]),mean:(examId,q,p)=>mean(read().exams[examId],q,p),snapshot};
 })();
