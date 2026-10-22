@@ -3,22 +3,22 @@
   const fixture = new URLSearchParams(location.search).get('fixture') || '';
   const fixtures = ['published','pending','signed'];
   const fixtureName = fixtures.includes(fixture) ? fixture : '';
-  const KEY = 'yifeng.frontend.github.v02' + (fixtureName ? ':' + fixtureName : '');
+  const KEY = 'yifeng.frontend.github.v03' + (fixtureName ? ':' + fixtureName : '');
   const subjects = ['作品朗读','新闻播报','话题评述'];
   const students = [
     {id:'A',name:'示例学员A',code:'YF-001',seat:'09',class:'示例一班'},
     {id:'B',name:'示例学员B',code:'YF-002',seat:'07',class:'示例二班'},
     {id:'C',name:'示例学员C',code:'YF-003',seat:'08',class:'示例一班'}
   ];
-  const initial = () => ({version:2,examName:'第一轮播音模拟考',date:'2026-10-22',roster:false,identity:false,paper18:false,papersSelected:true,assigned:true,prepared:false,
+  const initial = () => ({version:3,examName:'第一轮播音模拟考',date:'2026-10-22',roster:false,identity:false,paper18:false,papersSelected:true,assigned:true,prepared:false,
     checkin:false,checkinAt:'',checkinCount:0,draw:null,drawPending:false,handoff:'idle',onsiteEnded:false,device:false,stage:'ready',subject:0,started:0,
     local:[false,false,false],upload:['none','none','none'],checked:[false,false,false],opened:[false,false,false],
     scores:{},
     drafts:{},scoreIssue:{},published:false,publishVersion:0,scoreRev:1,reviewRev:0,teacherViews:{teacher1:{scoreSub:0,student:'A'},teacher2:{scoreSub:0,student:'A'}},
-    offline:false,saveFail:false,networkFail:false,permission:false,materialSub:0,accountActive:true,roleMonitor:true,roleRecord:true,scope:'第一轮 / 03考场',accountRevision:1,examDrafts:[]});
+    offline:false,saveFail:false,networkFail:false,permission:false,materialSub:0,accountActive:true,roleMonitor:true,roleRecord:true,scope:'第一轮 / 03考场',accountRevision:1,examDrafts:[],assignments:[[0,1],[0,1],[0,1]],assignmentRevision:1,publications:[],importMapped:false});
   const average = (data,q,p='A') => {
-    const a=[0,1].map(t=>data.scores[`${q}-${t}-${p}`]);
-    return a.every(Number.isFinite) ? ((a[0]+a[1])/2).toFixed(2) : null;
+    const a=data.assignments[q].map(t=>data.scores[`${q}-${t}-${p}`]);
+    return a.every(Number.isFinite) ? (a.reduce((n,v)=>n+v,0)/a.length).toFixed(2) : null;
   };
   function snapshot(data) {
     return {version:data.publishVersion,examName:data.examName,date:data.date,publishedAt:'2026-10-22 10:36',
@@ -34,12 +34,12 @@
       if(preset==='grading')for(let q=0;q<3;q++)for(let t=0;t<2;t++)delete data.scores[`${q}-${t}-A`];
       if(preset==='missing') delete data.scores['1-1-A'];
       if(preset==='upload') {data.upload[2]='failed';data.checked[2]=false;data.opened[2]=false;for(let t=0;t<2;t++)for(const p of students)delete data.scores[`2-${t}-${p.id}`];}
-      if(preset==='published') {data.published=true;data.publishVersion=1;data.publication=snapshot(data);}
+      if(preset==='published') {data.published=true;data.publishVersion=1;data.publication=snapshot(data);data.publications=[structuredClone(data.publication)];}
     }
     if(preset==='signed') Object.assign(data,{checkin:true,checkinAt:'10:24',checkinCount:1});
     return data;
   }
-  function read(){try{const saved=JSON.parse(localStorage.getItem(KEY));return saved?.version===2?saved:seed(fixtureName||'start')}catch{return seed(fixtureName||'start')}}
+  function read(){try{const saved=JSON.parse(localStorage.getItem(KEY));return saved?.version===3?saved:seed(fixtureName||'start')}catch{return seed(fixtureName||'start')}}
   let state=read();
   const listeners=new Set();
   const emit=()=>listeners.forEach(fn=>fn());
@@ -53,19 +53,21 @@
     result.actor=actor.id;result.actorGroup=group;
     if(group==='admin') return {...structuredClone(data),actor:actor.id,actorGroup:group,people:structuredClone(students)};
     if(group==='academic') {
-      for(const k of ['roster','identity','paper18','papersSelected','assigned','prepared','device','local','upload','checked','opened','materialSub','examDrafts']) result[k]=structuredClone(data[k]);
+      for(const k of ['roster','identity','paper18','papersSelected','assigned','prepared','device','local','upload','checked','opened','materialSub','examDrafts','assignments','assignmentRevision','scoreIssue','importMapped']) result[k]=structuredClone(data[k]);
       result.people=structuredClone(students);return result;
     }
     if(group==='teacher') {
+      result.assignedSubjects=actor.subjects.filter(q=>data.assignments[q].includes(actor.teacher));
       const pointer=data.teacherViews[actor.id]||{scoreSub:0,student:'A'};
-      result.teacher=actor.teacher;result.scoreSub=actor.subjects.includes(pointer.scoreSub)?pointer.scoreSub:actor.subjects[0];
-      result.student=students.some(p=>p.id===pointer.student)?pointer.student:'A';result.opened=structuredClone(data.opened);
+      result.teacher=actor.teacher;result.scoreSub=result.assignedSubjects.includes(pointer.scoreSub)?pointer.scoreSub:result.assignedSubjects[0]??0;
+      result.student=students.some(p=>p.id===pointer.student)?pointer.student:'A';result.opened=data.opened.map((v,q)=>result.assignedSubjects.includes(q)&&v);
       result.people=students.map(({id,code})=>({id,code}));
-      for(const k of ['scores','drafts','scoreIssue']) result[k]=Object.fromEntries(Object.entries(data[k]).filter(([key])=>+key.split('-')[1]===actor.teacher));
-      result.scoreRev=data.scoreRev;result.reviewRev=data.reviewRev;return result;
+      for(const k of ['scores','drafts','scoreIssue']) result[k]=Object.fromEntries(Object.entries(data[k]).filter(([key])=>+key.split('-')[1]===actor.teacher&&result.assignedSubjects.includes(+key.split('-')[0])));
+      result.assignmentRevision=data.assignmentRevision;result.scoreRev=data.scoreRev;result.reviewRev=data.reviewRev;return result;
     }
     if(group==='invigilator'||group==='recorder') {
       for(const k of ['accountActive','roleMonitor','roleRecord','scope','accountRevision'])result[k]=structuredClone(data[k]);
+      if(!data.accountActive||data.scope!=='第一轮 / 03考场'||(group==='invigilator'?!data.roleMonitor:!data.roleRecord)){result.people=[];return result;}
       for(const k of ['checkin','checkinAt','draw','handoff','onsiteEnded']) result[k]=structuredClone(data[k]);
       if(group==='invigilator') result.people=structuredClone(students);
       else {
@@ -77,14 +79,15 @@
     if(group==='student') {
       for(const k of ['checkin','checkinAt','checkinCount','draw','drawPending','handoff','onsiteEnded']) result[k]=structuredClone(data[k]);
       result.person=structuredClone(students.find(p=>p.id===actor.studentId));result.people=[result.person];
+      result.resultHistory=(data.publications||[]).map(pub=>({version:pub.version,examName:pub.examName,date:pub.date,publishedAt:pub.publishedAt,result:structuredClone(pub.results[actor.studentId])}));
       if(data.published&&data.publication) result.publication={version:data.publication.version,examName:data.publication.examName,date:data.publication.date,publishedAt:data.publication.publishedAt,result:structuredClone(data.publication.results[actor.studentId])};
       return result;
     }
     return {actor:'unknown',actorGroup:'unknown',people:[]};
   }
   const fields={
-    admin:['examName','date','roster','identity','paper18','papersSelected','assigned','prepared','checked','opened','published','publishVersion','publication','reviewRev','materialSub','accountActive','roleMonitor','roleRecord','scope','accountRevision','examDrafts'],
-    academic:['examName','date','roster','identity','paper18','papersSelected','assigned','prepared','checked','opened','materialSub','examDrafts'],
+    admin:['examName','date','roster','identity','paper18','papersSelected','assigned','prepared','checked','opened','published','publishVersion','publication','reviewRev','materialSub','accountActive','roleMonitor','roleRecord','scope','accountRevision','examDrafts','assignments','assignmentRevision','scoreIssue','importMapped'],
+    academic:['examName','date','roster','identity','paper18','papersSelected','assigned','prepared','checked','opened','materialSub','examDrafts','scoreIssue','importMapped'],
     invigilator:['handoff'],
     recorder:['device','stage','subject','started','local','upload','abnormal','interruptReason','handoff','onsiteEnded'],
     student:['checkin','checkinAt','checkinCount','draw','drawPending']
@@ -94,22 +97,22 @@
     return edit(data=>{
       const scoped=project(data,actorId);fn(scoped);
       if(actor.group==='teacher'){
-        const own=key=>{const [q,t,p]=key.split('-');return actor.subjects.includes(+q)&&+t===actor.teacher&&students.some(x=>x.id===p)};
+        const own=key=>{const [q,t,p]=key.split('-');return data.assignments[+q]?.includes(actor.teacher)&&+t===actor.teacher&&students.some(x=>x.id===p)};
         for(const k of ['scores','drafts','scoreIssue']){
           for(const key of Object.keys(data[k]))if(own(key)&&!(key in scoped[k]))delete data[k][key];
           for(const [key,value] of Object.entries(scoped[k]))if(own(key))data[k][key]=value;
         }
-        data.teacherViews[actor.id]={scoreSub:actor.subjects.includes(scoped.scoreSub)?scoped.scoreSub:0,student:students.some(p=>p.id===scoped.student)?scoped.student:'A'};
+        data.teacherViews[actor.id]={scoreSub:data.assignments[scoped.scoreSub]?.includes(actor.teacher)?scoped.scoreSub:actor.subjects.find(q=>data.assignments[q].includes(actor.teacher))??0,student:students.some(p=>p.id===scoped.student)?scoped.student:'A'};
         const changed=data.scoreRev!==scoped.scoreRev;data.scoreRev=scoped.scoreRev;data.reviewRev=scoped.reviewRev;if(data.published&&changed)data.resultChanged=true;
       }else for(const k of fields[actor.group]||[])if(scoped[k]!==undefined)data[k]=structuredClone(scoped[k]);
     });
   }
-  const complete=q=>students.every(p=>[0,1].every(t=>Number.isFinite(state.scores[`${q}-${t}-${p.id}`])));
-  const readyPublish=()=>{state=read();return [0,1,2].every(q=>complete(q)&&state.opened[q]&&state.checked[q]&&state.upload[q]==='received')};
+  const complete=q=>students.every(p=>state.assignments[q].every(t=>Number.isFinite(state.scores[`${q}-${t}-${p.id}`])));
+  const readyPublish=()=>{state=read();return [0,1,2].every(q=>complete(q)&&state.opened[q]&&state.checked[q]&&state.upload[q]==='received')&&!Object.values(state.scoreIssue).some(v=>v&&v.status!=='resolved')};
   function publish(actorId,expectedRev){
     if(RolePolicy.get(actorId).group!=='admin')return {ok:false,reason:'只有管理员可以发布全场成绩。'};
     state=read();if(!readyPublish()||state.scoreRev!==expectedRev)return {ok:false,reason:'评分或材料发生变化，请重新核对。'};
-    edit(data=>{data.published=true;data.publishVersion++;data.publication=snapshot(data);data.reviewRev=data.scoreRev;data.resultChanged=false});return {ok:true};
+    edit(data=>{data.published=true;data.publishVersion++;data.publication=snapshot(data);data.publications.push(structuredClone(data.publication));data.reviewRev=data.scoreRev;data.resultChanged=false});return {ok:true};
   }
   addEventListener('storage',e=>{if(e.key===KEY){state=read();emit()}});
   addEventListener('message',e=>{if(e.data?.type==='yf-refresh'){state=read();emit()}});
