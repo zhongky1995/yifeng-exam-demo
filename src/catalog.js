@@ -13,8 +13,9 @@ window.Catalog=[
   {
     "id": "U04",
     "screen": "U04",
-    "title": "新建考试",
-    "sub": "独立场次与配置参考",
+    "title": "管理员新建考试",
+    "sub": "新建功能的另一身份样例；正常准备路径见教务",
+    "sample": true,
     "device": "desktop",
     "phase": 0,
     "f": "F01–F09",
