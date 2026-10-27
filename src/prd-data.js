@@ -28,6 +28,7 @@
   F09:{entry:'管理员从本场账号岗位与评分分工进入；每个人再从本人任务入口工作。',scope:'按场次、考场、科目或本人区分读取与操作；组织身份不自动取得高影响决定权。',fields:[['人员、岗位、范围','对应本场职责；同一人可有多个岗位，执行时明确当前任务。'],['责任与历史归属','调岗不改写已有视频、评分和执行来源。']],system:'草稿内保存岗位和评委安排，各岗位只展示分配任务。临时换人作为待确认候选，默认收起。',states:['核对人员','安排本场岗位与本科评委','保存分工','各自进入任务'],handoff:'现场岗位按考场接续，老师按本科接续；账号开通认领及敏感决定权待CF03/CF07。'}
  };
  for(const f of features)Object.assign(f,contracts[f.id]||{});
+ Object.assign(features.find(f=>f.id==='F06'),{entry:'监考已确认本位放行且原文件已收到，教务从完整材料清单进入。',system:'现场技术核验与监考放行未完成时，暂不能核验考后评分材料或开放本科。材料问题仍保留原任务，补录新版本上传核验后再开放受影响老师重评。'});
  features.find(f=>f.id==='F08').coverage='已提供核对表CSV下载、发布快照与本人查询的前端交互；正式导出字段/格式及通知仍待确认，公开演示未接真实发布服务。';
 
  const feedback={
@@ -55,7 +56,8 @@
   {title:'本科材料可评？',feature:'F06',yes:'开放本科 → 每位老师评本科全部人',no:'缺失或问题 → 原文件处理后回核验'},
   {title:'评分齐备？',feature:'F08',yes:'核对预览 → 确认发布 → 本人查询',no:'缺评/待处理项 → 回原任务补齐，学生仍看旧发布版'}
  ];
- window.PRD={version:'0.8.1',features,roles,gates,forPage,rules,pagesFor:id=>Catalog.filter(n=>forPage(n.screen||n.id,n.as).includes(id))};
+ gates.splice(2,0,{title:'三科技术检查齐备？',feature:'F05',yes:'录制员提交 → 监考确认放行 → 下一位',no:'缺保存/检查或有视频问题 → 留在原学员处理，不释放考位'});
+ window.PRD={version:'0.8.2',features,roles,gates,forPage,rules,pagesFor:id=>Catalog.filter(n=>forPage(n.screen||n.id,n.as).includes(id))};
  Catalog.forEach(n=>{n.features=forPage(n.screen||n.id,n.as);n.f=n.features.join(' / ')});
  // Layout the main cards in the same relative order as the role's normal walkthrough.
  for(const r of Object.values(RoleWalks)){const phase=Catalog.find(n=>n.as===r.actor)?.phase;if(phase===undefined)continue;const ids=[];for(const s of r.steps){const n=Catalog.find(n=>n.as===r.actor&&(n.screen||n.id)===s.screen&&!n.fixture);if(n&&!ids.includes(n.id))ids.push(n.id);}const nodes=Catalog.filter(n=>n.phase===phase);nodes.sort((a,b)=>{const rank=n=>ids.includes(n.id)?ids.indexOf(n.id):100+Catalog.indexOf(n);return rank(a)-rank(b)});const start=Catalog.findIndex(n=>n.phase===phase);Catalog.splice(start,nodes.length,...nodes);CoreRoutes[phase]=ids;}
