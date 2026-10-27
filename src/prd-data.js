@@ -57,7 +57,7 @@
   {title:'评分齐备？',feature:'F08',yes:'核对预览 → 确认发布 → 本人查询',no:'缺评/待处理项 → 回原任务补齐，学生仍看旧发布版'}
  ];
  gates.splice(2,0,{title:'三科技术检查齐备？',feature:'F05',yes:'录制员提交 → 监考确认放行 → 下一位',no:'缺保存/检查或有视频问题 → 留在原学员处理，不释放考位'});
- window.PRD={version:'0.8.5',features,roles,gates,forPage,rules,pagesFor:id=>Catalog.filter(n=>forPage(n.screen||n.id,n.as).includes(id))};
+ window.PRD={version:'0.8.6',features,roles,gates,forPage,rules,pagesFor:id=>Catalog.filter(n=>forPage(n.screen||n.id,n.as).includes(id))};
  Catalog.forEach(n=>{n.features=forPage(n.screen||n.id,n.as);n.f=n.features.join(' / ')});
  // Layout the main cards in the same relative order as the role's normal walkthrough.
  for(const r of Object.values(RoleWalks)){const phase=Catalog.find(n=>n.as===r.actor)?.phase;if(phase===undefined)continue;const ids=[];for(const s of r.steps){const n=Catalog.find(n=>n.as===r.actor&&(n.screen||n.id)===s.screen&&!n.fixture);if(n&&!ids.includes(n.id))ids.push(n.id);}const nodes=Catalog.filter(n=>n.phase===phase);nodes.sort((a,b)=>{const rank=n=>ids.includes(n.id)?ids.indexOf(n.id):100+Catalog.indexOf(n);return rank(a)-rank(b)});const start=Catalog.findIndex(n=>n.phase===phase);Catalog.splice(start,nodes.length,...nodes);CoreRoutes[phase]=ids;}

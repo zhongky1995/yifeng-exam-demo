@@ -1,7 +1,8 @@
 /* Local fictional workflow model for the interactive prototype. No production service or authentication. */
 (() => {
   const params = new URLSearchParams(location.search);
-  const fixture = ['published','pending','signed','record'].includes(params.get('fixture')) ? params.get('fixture') : '';
+  const requestedFixture=params.get('fixture')||'',pageSample=requestedFixture.startsWith('page-')?window.ReviewSamples?.get(requestedFixture.slice(5)):null;
+  const fixture = pageSample||['published','pending','signed','record'].includes(requestedFixture)?requestedFixture:'';
   const walk=['academic','student','invigilator','recorder','teacher','admin'].includes(params.get('walk'))?params.get('walk'):'';
   const KEY = 'yifeng.frontend.github.v08' + (walk ? ':walk:'+walk : fixture ? ':' + fixture : '');
   const subjects = ['作品朗读','新闻播报','话题评述'];
@@ -35,6 +36,24 @@
     if(['post','grading','missing','upload','published','pending'].includes(preset)){fillResults(e);if(preset==='grading')e.scores={};if(preset==='missing')delete e.scores['1-1-A'];if(preset==='upload'){e.records.A.files[2].upload='failed';e.records.A.files[2].checked=false;e.opened[2]=false;for(let t=0;t<2;t++)delete e.scores[key(2,t,'A')];}if(preset==='published')e.publications=[snapshot(e)];}
     if(preset==='incident'){const f=fullFile(e,'A',0);Object.assign(f,{abnormal:true,upload:'none',checked:false});e.records.A.files[0]=f;e.records.A.stage='interrupted';e.exceptions.push({id:'CASE-1',type:'retake',person:'A',q:0,fileId:f.id,reason:'麦克风中断，原片段已保留',status:'pending',by:'recorder',createdAt:stamp(),messages:[]});}
     return {version:8,seq:20,examSeq:2,exams:{EX1:e,EXH:history},staff:{staff1:{id:'staff1',name:'工作人员甲',active:true},staff2:{id:'staff2',name:'工作人员乙',active:true}},faults:{offline:false,saveFail:false,networkFail:false,permission:false}};
+  }
+  function pageSeed(spec){
+    const d=seed(spec.preset),e=d.exams.EX1,r=e.records.A;e.name='本页体验 · 模拟考';
+    if(spec.mode==='prepared'||spec.mode==='paper'){e.status='draft';if(spec.mode==='paper')e.paperSelected=false;}
+    if(spec.mode==='materials'){e.opened=[false,false,false];e.scores={};for(const p of e.roster)e.records[p].files.forEach(f=>f.checked=false);}
+    if(spec.mode==='device'||spec.mode==='receive'){e.status='live';e.current='A';r.handoff='pending';e.deviceChecked=spec.mode==='receive';}
+    if(spec.mode==='technical'||spec.mode==='release'){r.files=subjects.map((_,q)=>({...fullFile(e,'A',q),upload:'queued',checked:false}));r.subject=2;r.stage=spec.mode==='release'?'awaiting_release':'saved';r.technicalSubmitted=spec.mode==='release';}
+    if(spec.mode==='uploads'){r.files.forEach(f=>{f.upload='queued';f.checked=false});e.opened=[false,false,false];e.scores={};e.lastEnded='A';}
+    if(spec.mode==='studentArrival')for(const p of e.roster)e.records[p]=record(p,e.records[p].seat);
+    if(spec.mode==='preparing'){r.draw=19;r.prepStarted=Date.now()-60000;}
+    if(spec.mode==='academicIssue'||spec.mode==='teacherIssue'){const by=spec.mode==='teacherIssue'?'teacher1':'academic';e.exceptions.push({id:'CASE-DEMO',type:'material',person:'A',q:0,fileId:r.files[0].id,reason:'虚构材料问题：声音需要复核',status:'pending',by,createdAt:stamp(),messages:[]});}
+    if(spec.mode==='correction'||spec.mode==='audit'){
+      e.publications=[snapshot(e)];const k=key(0,0,'A'),old=e.scores[k];
+      const c={id:'COR-DEMO',key:k,person:'A',q:0,teacher:0,by:'teacher1',oldValue:old.value,newValue:88,reason:'虚构示例：复核后申请调整',scoreRevision:old.revision,videoVersion:old.videoVersion,status:'pending',createdAt:stamp()};e.corrections.push(c);
+      if(spec.mode==='audit'){e.scoreAudit.push({key:k,...clone(old),reason:c.reason,decisionReason:'虚构示例：同意调整',requestId:c.id,at:stamp()});e.scores[k]={...old,value:c.newValue,revision:old.revision+1};e.scoreRev++;Object.assign(c,{status:'applied',response:'虚构示例：已确认修改，旧发布保持',decidedAt:stamp()});}
+    }
+    if(spec.mode==='recorderTransfer'||spec.mode==='monitorTransfer'){const role=spec.mode==='recorderTransfer'?'recorder':'invigilator';e.transfers.push({id:'TR-DEMO',role,from:'staff1',to:'staff2',reason:'候选演示：临时需要接手',status:'pending',staffRev:e.staffRev,person:e.current,createdAt:stamp(),files:[]});}
+    return d;
   }
   function walkSeed(role){
     const d=seed(role==='teacher'?'post':['student','invigilator','recorder','admin'].includes(role)?'queue':'start'),e=d.exams.EX1;
@@ -75,8 +94,9 @@
       if(!(e.walkAdvances??=[]).includes(advanceMark))e.walkAdvances.push(advanceMark);write(d);return {ok:true,message:'已接续其他岗位完成后的虚构样例。'};
     }catch(error){return {ok:false,message:error.message};}
   }
+  const initial=()=>walk?walkSeed(walk):pageSample?pageSeed(pageSample):seed(fixture||'start');
   let memory=null,storageError=false;
-  function read(){if(storageError&&memory)return memory;try{const d=JSON.parse(localStorage.getItem(KEY));return d?.version===8?d:walk?walkSeed(walk):seed(fixture||'start');}catch{return memory||(walk?walkSeed(walk):seed(fixture||'start'));}}
+  function read(){if(storageError&&memory)return memory;try{const d=JSON.parse(localStorage.getItem(KEY));return d?.version===8?d:initial();}catch{return memory||(initial());}}
   const listeners=new Set();
   function notify(announce=true){listeners.forEach(fn=>fn());if(announce&&parent!==window)parent.postMessage({type:'yf-state'},'*');}
   function write(d){memory=d;try{localStorage.setItem(KEY,JSON.stringify(d));storageError=false;}catch{storageError=true;}notify();}
@@ -185,6 +205,7 @@
   }
   addEventListener('storage',ev=>{if(ev.key===KEY)notify(false);});
   addEventListener('message',ev=>{if(ev.data?.type==='yf-refresh')listeners.forEach(fn=>fn());});
-  window.YF={KEY,fixture,walk,advanceWalk,subjects,students,view,run,reset,seed,edit,subscribe:fn=>listeners.add(fn),get state(){const d=read();return {...d,...d.faults};},prepIssues:(examId)=>prepIssues(read().exams[examId],read()),publishIssues:(examId)=>publishIssues(read().exams[examId]),mean:(examId,q,p)=>mean(read().exams[examId],q,p),snapshot};
+  window.YF={KEY,fixture,walk,pageSample,resetPageSample:()=>{if(pageSample)write(pageSeed(pageSample));},advanceWalk,subjects,students,view,run,reset,seed,edit,subscribe:fn=>listeners.add(fn),get state(){const d=read();return {...d,...d.faults};},prepIssues:(examId)=>prepIssues(read().exams[examId],read()),publishIssues:(examId)=>publishIssues(read().exams[examId]),mean:(examId,q,p)=>mean(read().exams[examId],q,p),snapshot};
+  if(pageSample&&!params.has('preview')){try{if(!localStorage.getItem(KEY))write(pageSeed(pageSample));}catch{write(pageSeed(pageSample));}}
   if(walk){try{if(params.get('walkReset')==='1'||!localStorage.getItem(KEY))write(walkSeed(walk));}catch{write(walkSeed(walk));}if(params.has('walkReset')){const u=new URL(location.href);u.searchParams.delete('walkReset');history.replaceState(null,'',u);}}
 })();
