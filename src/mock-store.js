@@ -61,16 +61,18 @@
     if(!walk)return {ok:false,message:'仅在独立角色体验中接续虚构样例。'};
     const d=read(),e=d.exams[examId];if(!e)return {ok:false,message:'请先选择本场。'};
     try{
-      if(e.walkAdvances?.includes(action))return {ok:true,message:'继续已接续的样例，保留本角色已完成的操作。'};
+      const scoped=['arrival','receive','onsite-end','released'].includes(action),pid=action==='arrival'?(e.queue.find(p=>!e.records[p].onsiteEnded&&e.records[p].attendance!=='absent')||e.roster[0]):e.current||e.lastEnded||e.roster[0],rr=e.records[pid],advanceMark=scoped?action+':'+pid:action;
+      const alreadyDone=action==='arrival'&&rr?.checkin&&rr.draw&&!rr.drawPending||action==='receive'&&(rr?.handoff==='accepted'||rr?.onsiteEnded)||action==='onsite-end'&&(rr?.technicalSubmitted||rr?.onsiteEnded)||action==='released'&&rr?.onsiteEnded;
+      if(scoped?alreadyDone:e.walkAdvances?.includes(action))return {ok:true,message:'继续当前学员已接续的样例，保留已完成操作。'};
       if(action==='materials'&&walk==='academic'){if(e.status==='draft')throw Error('请先由教务开放本场。');completeWalkSample(e);}
       else if(action==='graded'&&walk==='admin')completeWalkSample(e,true);
       else if(action==='published'&&walk==='student')completeWalkSample(e,true,true);
-      else if(action==='arrival'&&walk==='invigilator'){const r=e.records[e.roster[0]];Object.assign(r,{checkin:true,checkinAt:stamp(),draw:17,drawPending:false});}
+      else if(action==='arrival'&&walk==='invigilator'){const r=e.records[pid];if(!r)throw Error('当前没有待到场学员。');Object.assign(r,{checkin:true,checkinAt:r.checkinAt||stamp(),draw:r.draw||17,drawPending:false});}
       else if(action==='receive'&&walk==='invigilator'){const r=e.records[e.current];if(!r||r.handoff!=='pending')throw Error('先完成学员核对并发出交接。');r.handoff='accepted';}
       else if(action==='onsite-end'&&walk==='invigilator'){const r=e.records[e.current];if(!r||r.handoff!=='accepted')throw Error('先查看录制员接收后的状态。');Object.assign(r,{technicalSubmitted:true,stage:'awaiting_release',subject:2});r.files=subjects.map((_,q)=>({...fullFile(e,r.id,q,1,e.staff.recorder),upload:'queued',checked:false}));}
       else if(action==='released'&&walk==='recorder'){const r=e.records[e.current];if(!r?.technicalSubmitted)throw Error('先提交三科技术检查。');r.onsiteEnded=true;r.stage='done';e.lastEnded=r.id;e.current=null;}
       else throw Error('当前角色没有这一段体验接续。');
-      (e.walkAdvances??=[]).push(action);write(d);return {ok:true,message:'已接续其他岗位完成后的虚构样例。'};
+      if(!(e.walkAdvances??=[]).includes(advanceMark))e.walkAdvances.push(advanceMark);write(d);return {ok:true,message:'已接续其他岗位完成后的虚构样例。'};
     }catch(error){return {ok:false,message:error.message};}
   }
   let memory=null,storageError=false;
