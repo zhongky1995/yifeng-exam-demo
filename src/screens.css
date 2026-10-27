@@ -8,3 +8,13 @@ body{background:var(--background)}.layout{min-height:100vh;display:grid;grid-tem
 
 .skip:not(:focus){clip-path:inset(50%);width:1px;height:1px;padding:0;overflow:hidden}
 .extra-nav{border-top:1px solid var(--border);margin-top:14px;padding-top:10px}.extra-nav summary{cursor:pointer;font-size:13px;color:var(--muted);padding:8px}.extra-nav .button{display:block;font-size:13px;margin:5px 0}.phone-main>.extra-nav{margin-top:20px;background:#f0f3eb;border-radius:8px;padding:10px}
+/* V0.8 task details inherit the existing visual tokens. */
+.detailed-progress li{display:flex;gap:14px;padding:16px 12px;border-left:3px solid var(--border);margin:0 0 8px;list-style:none;border-radius:8px}
+.detailed-progress li.current{border-color:var(--primary,#187448);background:var(--surface-soft,#edf7ef)}
+.detailed-progress li.done .progress-number{color:var(--primary,#187448);font-weight:700}
+.progress-number{flex:0 0 24px;font-variant-numeric:tabular-nums}.detailed-progress{padding-left:0}.detailed-progress p{margin:6px 0 10px}
+.prep-question{border-top:1px solid var(--border);padding:16px 0}.prep-question summary{cursor:pointer;font-weight:650;line-height:1.7}.prep-question .paper{margin-top:16px}
+.prep-timer{font-size:48px;font-variant-numeric:tabular-nums}.rubric-list dt{font-weight:650;margin-top:12px}.rubric-list dd{margin:6px 0;color:var(--text-muted,#66736a);line-height:1.7}
+.band-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.band-grid>div{padding:12px;background:var(--background,#f4f7f3);border-radius:8px}.band-grid span,.band-grid strong,.band-grid small{display:block}.band-grid strong{margin:6px 0}
+.reference-total{display:flex;align-items:center;justify-content:space-between;padding:18px;background:var(--background,#f4f7f3);border-radius:10px;margin:16px 0}.reference-total strong{font-size:30px;font-variant-numeric:tabular-nums}
+@media(max-width:600px){.band-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.technical-list .listrow{align-items:flex-start;flex-wrap:wrap}.technical-list small{overflow-wrap:anywhere}.detailed-progress li{padding:14px 8px}}
