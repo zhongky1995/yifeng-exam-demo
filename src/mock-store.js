@@ -1,7 +1,7 @@
 /* Local fictional workflow model for the interactive prototype. No production service or authentication. */
 (() => {
   const params = new URLSearchParams(location.search);
-  const fixture = ['published','pending','signed'].includes(params.get('fixture')) ? params.get('fixture') : '';
+  const fixture = ['published','pending','signed','record'].includes(params.get('fixture')) ? params.get('fixture') : '';
   const walk=['academic','student','invigilator','recorder','teacher','admin'].includes(params.get('walk'))?params.get('walk'):'';
   const KEY = 'yifeng.frontend.github.v08' + (walk ? ':walk:'+walk : fixture ? ':' + fixture : '');
   const subjects = ['作品朗读','新闻播报','话题评述'];

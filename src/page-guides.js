@@ -79,7 +79,7 @@
    const saved=e.scores?.[`${q}-${actor.teacher}-${p}`],blocked=!e.opened[q]||!r?.files[q]?.checked||e.blockedFiles?.includes(`${p}-${q}`);
    result.current=!r||!e.assignedSubjects?.includes(q)?'当前没有本人的这份评分任务，请先从“我的评卷”选择科目和任务。':blocked?'当前材料未开放或存在待处理问题，暂不能评分；请先看材料状态或原问题回执。':saved?'本人的原分数已保存；如需修改，请填拟更正分数与原因提交申请。':'当前材料已开放，可填写并保存本人的分数。';
   }
-  if(screen==='A02')result.current=!r||e.current!==p||r.handoff!=='accepted'?'当前尚未接收这位学员，请先回“当前学员”核对并接收。':r.stage==='recording'?'当前正在录制，到时自动结束保存；提前结束或中断按现场操作记录。':r.stage==='saving'?'当前正在保存，等待结果或查询原保存任务。':r.files[r.subject]?fileState(r.files[r.subject])+'。':'当前科目准备就绪，核对后开始录制。';
+  if(screen==='A02')result.current=!r||e.current!==p||r.handoff!=='accepted'?'当前尚未接收这位学员，请先检查设备并回“当前学员”核对接收；如从功能说明或白板评审，可用页面上方“直接体验录制倒计时”打开独立样例。':r.stage==='recording'?'当前正在录制，到时自动结束保存；提前结束或中断按现场操作记录。':r.stage==='saving'?'当前正在保存，等待结果或查询原保存任务。':r.files[r.subject]?fileState(r.files[r.subject])+'。':'当前科目准备就绪，点击“开始本科录制”后才显示递减的录制剩余时间。';
   if(screen==='A05'){
    const f=Object.values(e.records||{}).flatMap(x=>[...x.files,...x.history.flat()]).find(x=>x?.id===params.get('file'))||r?.files[q];
    result.current=f?!f.localReviewed?'本科尚未完成本地技术检查，请返回本科录制页核对后再上传。':fileState(f)+'。':'当前没有选定原文件，请从本机文件队列进入。';
