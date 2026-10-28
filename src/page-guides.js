@@ -68,7 +68,7 @@
   if(e.status==='archived'){result.current='当前是历史场次，仅查看原记录，无需再签到、抽题或提交。';return result;}
   if(view.faults.permission){result.current='当前演示了授权待核对状态，需先恢复授权再继续。';return result;}
   if(globals.includes(screen)){result.current='列表按当前身份显示可进入的场次。';return result;}
-  const p=actor.studentId||params.get('person')||e.current||e.lastEnded||e.roster[0],r=e.records?.[p],q=/^[012]$/.test(params.get('q'))?+params.get('q'):0;
+  const p=actor.studentId||(['A02','A04','A06','A07'].includes(screen)&&e.current)||params.get('person')||e.current||e.lastEnded||e.roster[0],r=e.records?.[p],q=/^[012]$/.test(params.get('q'))?+params.get('q'):0;
   if(screen==='W11'&&e.status!=='draft'){result.title='本场名单记录';result.when='本场开放后，教务需要回看本次导入名单时。';result.task='只读核对已导入学员、机构编号和计划排次，不覆盖已经产生的考试记录。';result.next='到本场安排核对结果，或返回本场总览。';}
   if(['W01','W11','W12','W03'].includes(screen))result.current=e.status==='draft'?'当前还在准备，补齐后回准备清单开放本场。':'本场已开放，此处查看准备结果，继续执行请回本场总览。';
   if(['M01','M02','M04','A04'].includes(screen))result.current=e.current?'场内已有一位学员；待本位现场结束后再交接下一位。':'场内暂无学员。监考核对就绪后发出交接，录制员再接收。';
@@ -80,7 +80,8 @@
    const saved=e.scores?.[`${q}-${actor.teacher}-${p}`],blocked=!e.opened[q]||!r?.files[q]?.checked||e.blockedFiles?.includes(`${p}-${q}`);
    result.current=!r||!e.assignedSubjects?.includes(q)?'当前没有本人的这份评分任务，请先从“我的评卷”选择科目和任务。':blocked?'当前材料未开放或存在待处理问题，暂不能评分；请先看材料状态或原问题回执。':saved?'本人的原分数已保存；如需修改，请填拟更正分数与原因提交申请。':'当前材料已开放，可填写并保存本人的分数。';
   }
-  if(screen==='A02')result.current=!r||e.current!==p||r.handoff!=='accepted'?'当前尚未接收这位学员，请先检查设备并回“当前学员”核对接收；如从功能说明或白板评审，可用页面上方“直接体验录制倒计时”打开独立样例。':r.stage==='recording'?'当前正在录制，到时自动结束保存；提前结束或中断按现场操作记录。':r.stage==='saving'?'当前正在保存，等待结果或查询原保存任务。':r.files[r.subject]?fileState(r.files[r.subject])+'。':'当前科目准备就绪，在工作台点击“开始本科录制”，安卓机同屏页同步展示大倒计时。';
+  if(['A02','A04','A06','A07'].includes(screen)&&r)result.context+=' · '+(view.people.find(x=>x.id===p)?.name||p)+' · '+['作品朗读','新闻播报','话题评述'][r.subject||0];
+  if(screen==='A02')result.current=!e.current?(r?.onsiteEnded?'监考已确认放行，场内空闲；安卓同屏已清空上一位题目，等待下一位。':'等待监考交接当前学员。'):!r||r.handoff!=='accepted'?'当前学员待录制员接收，请到当前学员页核对；不会继续上一位录制。':r.technicalSubmitted?'三科技术检查已提交，等待监考放行，本岗位不能自行释放考位。':r.stage==='recording'?'当前正在录制，到时自动结束保存；两端跟随当前学员与科目。':r.stage==='saving'?'当前正在保存，等待结果或查询原保存任务。':r.files[r.subject]?.localReviewed?'本科已检查，可接续下一科；三科齐备后提交技术核验。':r.files[r.subject]?'本科已保存，等待核对画面、声音、时长与完整性。':'当前科目准备就绪，在工作台点击“开始本科录制”，安卓同屏同步展示大倒计时。';
   if(screen==='A05'){
    const f=Object.values(e.records||{}).flatMap(x=>[...x.files,...x.history.flat()]).find(x=>x?.id===params.get('file'))||r?.files[q];
    result.current=f?!f.localReviewed?'本科尚未完成本地技术检查，请返回本科录制页核对后再上传。':fileState(f)+'。':'当前没有选定原文件，请从本机文件队列进入。';
@@ -91,10 +92,9 @@
   if(screen==='M04'&&r?.onsiteEnded)result.current='这位学员现场已结束，可回候考名单核对下一位，原文件另行处理。';
   if(screen==='S03')result.current=params.get('scan')==='wrong'?'当前演示扫错考场，没有签到；请核对本人安排后重新扫码。':params.get('scan')==='expired'?'当前演示签到码失效，没有签到；请使用监考提供的有效码。':r?.checkin?'本人已有签到记录，无需重复签到。':'尚未确认本人签到。';
   if(screen==='S04')result.current=r?.checkin?'本人已签到，请按工作人员引导候考。':'本人尚未签到，请先到安排考场扫码。';
-  if(screen==='A07'){const cr=e.records[e.current];result.current=!cr?'当前没有场内学员，手机清空上一位题目并等待工作台。':cr.technicalSubmitted?'三科技术检查已提交，等待监考放行。':cr.stage==='recording'?'正在录制，题目与倒计时保持同科；开始/异常操作在工作台。':cr.stage==='saving'?'本科已结束，安卓机本地保存中。':cr.files[cr.subject]?'本科已保存，请等待工作台检查并接续。':'已显示当前题目，等待录制员从工作台开始。';}
-  if(screen==='A06')result.current=!r||e.current!==p||r.handoff!=='accepted'?'当前没有待技术核验的在场学员，请回当前学员页或原文件队列。':r.technicalSubmitted?'已提交给监考，等待放行；当前考位未释放。':'三科本地检查齐备后才能提交，问题保留原文件登记处理。';
-  if(screen==='A04'&&r?.technicalSubmitted&&!r.onsiteEnded)result.current='技术检查已提交，等待监考确认放行；本岗位不能自行释放考位。';
-  if(screen==='A04'&&r?.onsiteEnded)result.current='本位已由监考放行，可等待下一位；原学员文件继续留在原名下上传。';
+  if(screen==='A07'){const cr=e.records[e.current];result.current=!cr?'当前没有场内学员，手机清空上一位题目与计时并等待工作台。':cr.handoff!=='accepted'?'当前学员待录制员接收，手机不展示上一位题目。':cr.technicalSubmitted?'三科技术检查已提交，等待监考放行。':cr.stage==='recording'?'正在录制，题目与倒计时保持同科；开始/异常操作在工作台。':cr.stage==='saving'?'本科已结束，安卓机本地保存中。':cr.files[cr.subject]?.localReviewed?'本科已检查，等待工作台接续或提交三科技术核验。':cr.files[cr.subject]?'本科已保存，等待工作台技术检查。':'已显示当前题目，等待录制员从工作台开始。';}
+  if(screen==='A06')result.current=!e.current&&r?.onsiteEnded?'监考已确认放行，本人现场考试已完成；原文件保留，等待下一位。':!r||r.handoff!=='accepted'?'当前学员尚待录制员接收，先核对并完成录制。':r.technicalSubmitted?'已提交给监考，等待放行；当前考位未释放。':'三科本地检查齐备后才能提交，问题保留原文件登记处理。';
+  if(screen==='A04')result.current=e.current?(r?.handoff==='pending'?'当前学员待录制员核对接收；两端不沿用上一位状态。':r?.technicalSubmitted?'技术检查已提交，等待监考确认放行；本岗位不能自行释放考位。':'当前学员已接收，从工作台继续本科录制与检查。'):r?.onsiteEnded?'本位已由监考放行，可等待下一位；原学员文件继续留在原名下上传。':'场内空闲，等待监考交接下一位。';
   if(screen==='D01')result.current=r?.drawPending?'已发出本次抽题，请查询原结果。':r?.draw?'本次三科题组已锁定，15分钟备稿按原起点继续；刷新不重新抽题。':r?.checkin?'本人已签到，按现场安排抽取本次题套。':'本人尚未签到，请先确认到场记录。';
   if(screen==='S06'&&r){const m=r.mediaProgress||[],next=m.findIndex(f=>!f.saved);result.current=!r.checkin?'当前待本人签到。':!r.draw||r.drawPending?'当前待整套抽题结果确认。':r.handoff==='idle'&&r.prepStarted&&Date.now()-r.prepStarted<900000?'当前正在15分钟备稿，按原起点继续计时。':r.handoff!=='accepted'?'当前候考或等待录制员接收，请按监考引导入场。':next>=0?'当前等待完成'+['作品朗读','新闻播报','话题评述'][next]+'录制与保存。':!r.technicalSubmitted||r.technicalBlocked?'当前等待离场前技术检查及视频问题处理。':!r.onsiteEnded?'当前等待监考确认放行，现场尚未结束。':m.some(f=>!f.materialChecked)?'本人现场已完成，原文件上传与教务材料核验继续进行。':e.publications.length?'本人结果已发布，可查看对应发布版本。':'材料已核验，等待老师评阅及管理员核对发布。';}
   if(screen==='S02')result.current=params.get('version')&&!e.publications.some(x=>String(x.version)===params.get('version'))?'当前请求的发布版本不存在，请核对原记录；没有自动换成其他版本。':e.publications.length?'本场已发布本人结果，可查看所选版本。':'本场成绩尚未发布，这里暂时不显示分数。';

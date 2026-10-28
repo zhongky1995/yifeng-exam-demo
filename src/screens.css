@@ -18,3 +18,6 @@ body{background:var(--background)}.layout{min-height:100vh;display:grid;grid-tem
 .band-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.band-grid>div{padding:12px;background:var(--background,#f4f7f3);border-radius:8px}.band-grid span,.band-grid strong,.band-grid small{display:block}.band-grid strong{margin:6px 0}
 .reference-total{display:flex;align-items:center;justify-content:space-between;padding:18px;background:var(--background,#f4f7f3);border-radius:10px;margin:16px 0}.reference-total strong{font-size:30px;font-variant-numeric:tabular-nums}
 @media(max-width:600px){.band-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.technical-list .listrow{align-items:flex-start;flex-wrap:wrap}.technical-list small{overflow-wrap:anywhere}.detailed-progress li{padding:14px 8px}}
+
+/* The locked preparation content uses the same two reading parts as Android. */
+.prep-question .paper{white-space:pre-line}
