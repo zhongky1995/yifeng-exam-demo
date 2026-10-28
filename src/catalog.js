@@ -515,7 +515,7 @@ window.Catalog=[
     "as": "recorder",
     "title": "我的录制任务",
     "sub": "本人设备与待传文件",
-    "device": "mobile",
+    "device": "desktop",
     "phase": 4,
     "f": "F01–F09",
     "x": 60,
@@ -526,7 +526,7 @@ window.Catalog=[
     "as": "recorder",
     "title": "开场设备检查",
     "sub": "画面、收音与同屏",
-    "device": "mobile",
+    "device": "desktop",
     "phase": 4,
     "f": "F01–F09",
     "x": 440,
@@ -537,7 +537,7 @@ window.Catalog=[
     "as": "recorder",
     "title": "当前学员与三科进度",
     "sub": "接收条件 · 本位完成结果",
-    "device": "mobile",
+    "device": "desktop",
     "phase": 4,
     "f": "F01–F09",
     "x": 820,
@@ -546,20 +546,21 @@ window.Catalog=[
   {
     "id": "A02",
     "as": "recorder",
-    "title": "本科准备与录制",
-    "sub": "准备、作答、本地结果",
-    "device": "landscape",
+    "title": "录制员工作台",
+    "sub": "控制固定安卓机 · 逐科录制与检查",
+    "device": "desktop",
     "phase": 4,
     "f": "F01–F09",
     "x": 1200,
     "y": 5855
   },
+  {"id":"A07","as":"recorder","title":"固定安卓机 · 学员同屏画面","sub":"题目为主 · 大倒计时 · 左下镜像小预览","device":"landscape","phase":4,"f":"F05","x":2100,"y":5855},
   {
     "id": "A06",
     "as": "recorder",
     "title": "离场前技术检查",
     "sub": "三科音画、时长与保存 → 提交监考放行",
-    "device": "mobile",
+    "device": "desktop",
     "phase": 4,
     "f": "F04 / F05",
     "x": 1400,
@@ -570,7 +571,7 @@ window.Catalog=[
     "as": "recorder",
     "title": "本机视频上传队列",
     "sub": "逐文件状态与原文件重试",
-    "device": "mobile",
+    "device": "desktop",
     "phase": 4,
     "f": "F01–F09",
     "x": 1920,
@@ -581,7 +582,7 @@ window.Catalog=[
     "as": "recorder",
     "title": "原文件详情",
     "sub": "原学员原科 · 保存与收到",
-    "device": "mobile",
+    "device": "desktop",
     "phase": 4,
     "f": "F01–F09",
     "x": 2300,
@@ -630,7 +631,7 @@ window.Catalog=[
     "screen": "A00",
     "title": "录制乙岗位任务",
     "sub": "候选换人场景的接手人员样例",
-    "device": "mobile",
+    "device": "desktop",
     "phase": 4,
     "f": "F01–F09",
     "as": "recorder2",
@@ -782,7 +783,7 @@ window.Catalog=[
     "sample": true
   }
 ];
-window.Phases=["管理员 · 本场统筹与发布", "教务 · 开场准备与考后材料", "评卷老师 · 本人科目与评分", "监考 · 候考与学员入场交接", "录制 · 当前学员与原文件", "学生 · 本人考试与成绩"];
+window.Phases=["管理员 · 本场统筹与发布", "教务 · 开场准备与考后材料", "评卷老师 · 本人科目与评分", "监考 · 候考与学员入场交接", "录制 · 工作台与固定安卓机", "学生 · 本人考试与成绩"];
 window.CanvasRows=[{"top": 82, "text": "常用：选场、总览、核对与发布；异常、改分和换人按需查看"}, {"top": 2542, "text": "准备时核对名单和套卷，考后核验材料；准备清单负责开场"}, {"top": 3822, "text": "本人科目 → 任务队列 → 评分 → 完成记录；有问题再登记"}, {"top": 5102, "text": "出示签到码、核对队首、交给录制员；本位结束后接下一位"}, {"top": 5792, "text": "设备检查、接收当前人、逐科保存、结束本位；文件随后上传"}, {"top": 7072, "text": "本人安排、扫码、签到回执、题套、参加进度、已发布成绩"}];
 window.CanvasSize={"width": 3440, "height": 8415};
 window.CatalogAliases={"U01": "U02", "U01A": "U02A", "U01T": "W05", "U01T2": "W05T2", "W02": "W12", "W15": "X01A", "W15T": "X01T"};

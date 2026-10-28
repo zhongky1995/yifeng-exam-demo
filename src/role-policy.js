@@ -1,6 +1,6 @@
 /* Reviewer identities and prototype page access; real login is outside this static demo. */
 (()=>{
- const groups={admin:['U01','U02','U03','U04','W01','W02','W03','W04','W07','W08','W09','W10','W11','W12','W13','W14','W15','W18','W19','W24','W25','W26','T01','T02','X01','X02'],academic:['U01','U02','U03','U04','W01','W02','W03','W04','W11','W12','W14','W15','X01','X02'],teacher:['U01','U02','W05','W06','W15','W16','W17','W24','W25','X01','X02'],invigilator:['U01','U02','M00','M01','M02','M03','M04','M05','T01','T02','X01','X02'],recorder:['U01','U02','A00','A01','A02','A03','A04','A05','A06','T01','T02','X01','X02'],student:['S00','S01','S02','S03','S04','S05','S06','D01']};
+ const groups={admin:['U01','U02','U03','U04','W01','W02','W03','W04','W07','W08','W09','W10','W11','W12','W13','W14','W15','W18','W19','W24','W25','W26','T01','T02','X01','X02'],academic:['U01','U02','U03','U04','W01','W02','W03','W04','W11','W12','W14','W15','X01','X02'],teacher:['U01','U02','W05','W06','W15','W16','W17','W24','W25','X01','X02'],invigilator:['U01','U02','M00','M01','M02','M03','M04','M05','T01','T02','X01','X02'],recorder:['U01','U02','A00','A01','A02','A03','A04','A05','A06','A07','T01','T02','X01','X02'],student:['S00','S01','S02','S03','S04','S05','S06','D01']};
  const actors={
  admin:{id:'admin',label:'管理员',name:'管理员丙',group:'admin',home:'U02'},
  academic:{id:'academic',label:'教务',name:'教务员丁',group:'academic',home:'U02'},
