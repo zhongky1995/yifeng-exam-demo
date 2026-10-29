@@ -16,6 +16,24 @@
   const record = (id,seat) => ({id,seat,checkin:false,checkinAt:'',draw:null,drawPending:false,prepStarted:0,technicalSubmitted:false,handoff:'idle',onsiteEnded:false,attendance:'normal',subject:0,stage:'ready',started:0,files:[null,null,null],history:[[],[],[]]});
   const makeExam = (id,name,date,room='03考场') => ({id,name,date,room,status:'draft',slot:'09:00–12:00',roster:[],records:{},paperSelected:false,paperComplete:true,staff:{invigilator:'staff1',recorder:'staff1'},staffRev:1,scorePolicy:{differenceThreshold:null},deviceChecked:false,captureDevice:{lens:'rear',previewMirror:true},assignments:[[0,1],[0,1],[0,1]],assignmentRev:1,opened:[false,false,false],current:null,queue:[],scores:{},drafts:{},scoreAudit:[],scoreRev:1,publications:[],exceptions:[],transfers:[],corrections:[],log:[],prepSaved:false});
   const fullFile = (e,p,q,version=1,owner='staff1') => ({id:`${e.id}-${p}-${q}-v${version}`,examId:e.id,person:p,q,version,device:e.room+'-01',originRecorder:owner,custodian:owner,local:true,abnormal:false,upload:'received',checked:true,localReviewed:true,duration:ExamSpec.durations[q],createdAt:stamp()});
+  const clock=()=>Date.now()+(read().reviewTimeOffset||0);
+  function preparation(r,at=clock()){
+    if(!r?.checkin)return {state:'unsigned',remaining:0,deadline:0,label:'尚未签到'};
+    if(!r.draw)return {state:'undrawn',remaining:0,deadline:0,label:'已签到，待进入备考抽题'};
+    if(!ExamSpec.papers[r.draw])return {state:'unconfirmed',remaining:0,deadline:0,label:'原题组版本待核对，暂不能交接'};
+    if(r.drawPending)return {state:'pending',remaining:0,deadline:0,label:'抽题结果待恢复，请查询原记录'};
+    if(!Number.isFinite(r.prepStarted)||r.prepStarted<=0)return {state:'unconfirmed',remaining:0,deadline:0,label:'备稿记录待核对，暂不能交接'};
+    const deadline=r.prepStarted+ExamSpec.prepSeconds*1000,remaining=Math.max(0,(deadline-at)/1000);
+    return {state:remaining>0?'running':'ready',remaining,deadline,label:remaining>0?'备稿中 · 剩余'+ExamSpec.time(remaining):'备稿已结束，等待监考叫号'};
+  }
+  function advancePreparationDemo(examId,person){
+    if(!walk&&!fixture)return {ok:false,message:'仅在明确标记的独立演示样例中模拟时间。'};
+    const d=read(),e=d.exams[examId],r=e?.records[person];if(!r)return {ok:false,message:'未找到当前样例学员。'};
+    if(Object.values(d.exams).some(busy))return {ok:false,message:'当前正在录制或保存，不能快进演示时间。'};
+    const p=preparation(r,Date.now()+(d.reviewTimeOffset||0));if(p.state!=='running')return {ok:false,message:'当前没有正在进行的备稿计时。'};
+    d.reviewTimeOffset=(d.reviewTimeOffset||0)+Math.ceil(p.remaining*1000)+1;write(d);
+    return {ok:true,message:'仅演示时间已快进到备稿结束；原题组、备稿起点和截止时间均未改写。'};
+  }
   const key = (q,t,p) => `${q}-${t}-${p}`;
   const mean = (e,q,p) => {
     const values=e.assignments[q].map(t=>e.scores[key(q,t,p)]?.value);
@@ -25,12 +43,12 @@
   function prepare(e) {e.roster=['A','B','C'];e.queue=[...e.roster];e.records=Object.fromEntries(e.roster.map((p,i)=>[p,record(p,String(i+1).padStart(2,'0'))]));e.paperSelected=true;e.status='ready';e.prepSaved=true;}
   function fillResults(e) {
     prepare(e);e.status='live';e.deviceChecked=true;e.opened=[true,true,true];
-    for(const p of e.roster){const r=e.records[p];Object.assign(r,{checkin:true,checkinAt:'09:00',draw:17,handoff:'accepted',onsiteEnded:true,technicalSubmitted:true,stage:'done',subject:2});r.files=subjects.map((_,q)=>fullFile(e,p,q));for(let q=0;q<3;q++)for(let t=0;t<2;t++)e.scores[key(q,t,p)]={value:[86,85,90][q]+t*2-(p==='B'?2:p==='C'?4:0),videoVersion:1,revision:1,updatedAt:stamp()};}
+    for(const p of e.roster){const r=e.records[p];Object.assign(r,{checkin:true,checkinAt:'09:00',draw:17,prepStarted:Date.now()-900001,handoff:'accepted',onsiteEnded:true,technicalSubmitted:true,stage:'done',subject:2});r.files=subjects.map((_,q)=>fullFile(e,p,q));for(let q=0;q<3;q++)for(let t=0;t<2;t++)e.scores[key(q,t,p)]={value:[86,85,90][q]+t*2-(p==='B'?2:p==='C'?4:0),videoVersion:1,revision:1,updatedAt:stamp()};}
   }
   function seed(preset='start') {
     const e=makeExam('EX1','第一轮播音模拟考','2026-10-22');const history=makeExam('EXH','上一轮播音模拟考','2026-10-15');fillResults(history);history.publications=[snapshot(history)];history.status='archived';
     if(['queue','record','transfer','incident','signed'].includes(preset))prepare(e);
-    if(['queue','record','transfer','incident'].includes(preset))for(const p of e.roster)Object.assign(e.records[p],{checkin:true,checkinAt:'09:05',draw:17});
+    if(['queue','record','transfer','incident'].includes(preset))for(const p of e.roster)Object.assign(e.records[p],{checkin:true,checkinAt:'09:05',draw:17,prepStarted:Date.now()-900001});
     if(['record','transfer','incident'].includes(preset)){e.status='live';e.deviceChecked=true;e.current='A';e.records.A.handoff='accepted';}
     if(preset==='signed')Object.assign(e.records.A,{checkin:true,checkinAt:'09:05'});
     if(['post','grading','missing','upload','published','pending'].includes(preset)){fillResults(e);if(preset==='grading')e.scores={};if(preset==='missing')delete e.scores['1-1-A'];if(preset==='upload'){e.records.A.files[2].upload='failed';e.records.A.files[2].checked=false;e.opened[2]=false;for(let t=0;t<2;t++)delete e.scores[key(2,t,'A')];}if(preset==='published')e.publications=[snapshot(e)];}
@@ -71,7 +89,7 @@
   function completeWalkSample(e,graded=false,published=false){
     if(!e.roster.length)throw Error('请先完成本场名单。');
     e.status='live';e.current=null;e.deviceChecked=true;e.opened=[graded,graded,graded];e.scores={};e.drafts={};e.publications=[];
-    for(const p of e.roster){const r=e.records[p];Object.assign(r,{checkin:true,checkinAt:r.checkinAt||stamp(),draw:r.draw||17,drawPending:false,prepStarted:r.prepStarted||0,handoff:'accepted',onsiteEnded:true,technicalSubmitted:true,subject:2,stage:'done'});r.files=subjects.map((_,q)=>({...fullFile(e,p,q,1,e.staff.recorder),checked:graded}));
+    for(const p of e.roster){const r=e.records[p];Object.assign(r,{checkin:true,checkinAt:r.checkinAt||stamp(),draw:r.draw||17,drawPending:false,prepStarted:r.prepStarted||clock()-900001,handoff:'accepted',onsiteEnded:true,technicalSubmitted:true,subject:2,stage:'done'});r.files=subjects.map((_,q)=>({...fullFile(e,p,q,1,e.staff.recorder),checked:graded}));
       if(graded)for(let q=0;q<3;q++)for(const t of e.assignments[q])e.scores[key(q,t,p)]={value:86+q+t,videoVersion:1,revision:1,updatedAt:stamp()};
     }
     e.scoreRev++;if(published)e.publications=[snapshot(e)];
@@ -86,7 +104,7 @@
       if(action==='materials'&&walk==='academic'){if(e.status==='draft')throw Error('请先由教务开放本场。');completeWalkSample(e);}
       else if(action==='graded'&&walk==='admin')completeWalkSample(e,true);
       else if(action==='published'&&walk==='student')completeWalkSample(e,true,true);
-      else if(action==='arrival'&&walk==='invigilator'){const r=e.records[pid];if(!r)throw Error('当前没有待到场学员。');Object.assign(r,{checkin:true,checkinAt:r.checkinAt||stamp(),draw:r.draw||17,drawPending:false});}
+      else if(action==='arrival'&&walk==='invigilator'){const r=e.records[pid];if(!r)throw Error('当前没有待到场学员。');Object.assign(r,{checkin:true,checkinAt:r.checkinAt||stamp(),draw:r.draw||17,drawPending:false,prepStarted:r.prepStarted||clock()-900001});}
       else if(action==='receive'&&walk==='invigilator'){const r=e.records[e.current];if(!r||r.handoff!=='pending')throw Error('先完成学员核对并发出交接。');r.handoff='accepted';}
       else if(action==='onsite-end'&&walk==='invigilator'){const r=e.records[e.current];if(!r||r.handoff!=='accepted')throw Error('先查看录制员接收后的状态。');Object.assign(r,{technicalSubmitted:true,stage:'awaiting_release',subject:2});r.files=subjects.map((_,q)=>({...fullFile(e,r.id,q,1,e.staff.recorder),upload:'queued',checked:false}));}
       else if(action==='released'&&walk==='recorder'){const r=e.records[e.current];if(!r?.technicalSubmitted)throw Error('先提交三科技术检查。');r.onsiteEnded=true;r.stage='done';e.lastEnded=r.id;e.current=null;}
@@ -106,7 +124,7 @@
   function responsible(a,e){return ['admin','academic'].includes(a.group)||['invigilator','recorder'].includes(a.group)&&e.staff[a.group]===a.staffId;}
   const publicRecord = (r,e) => ({id:r.id,seat:r.seat,checkin:r.checkin,checkinAt:r.checkinAt,draw:r.draw,drawPending:r.drawPending,handoff:r.handoff,onsiteEnded:r.onsiteEnded,attendance:r.attendance,prepStarted:r.prepStarted,subject:r.subject,stage:r.stage,started:r.started,technicalSubmitted:r.technicalSubmitted,technicalBlocked:e?onsiteBlocked(e,r.id):false,mediaProgress:r.files.map(f=>({saved:!!f?.local,localReviewed:!!f?.localReviewed,upload:f?.upload||'none',materialChecked:!!f?.checked}))});
   function view(actorId,examId='EX1'){
-    const d=read(),a=RolePolicy.get(actorId),source=d.exams[examId];const out={actor:a,staff:clone(d.staff),faults:clone(d.faults),storageError,exams:Object.values(d.exams).filter(e=>allowedExam(a,e)).map(e=>({id:e.id,name:e.name,date:e.date,room:e.room,status:e.status,publicationVersion:e.publications.length})),exam:null,people:[]};
+    const d=read(),a=RolePolicy.get(actorId),source=d.exams[examId];const out={actor:a,staff:clone(d.staff),faults:clone(d.faults),reviewTimeOffset:d.reviewTimeOffset||0,storageError,exams:Object.values(d.exams).filter(e=>allowedExam(a,e)).map(e=>({id:e.id,name:e.name,date:e.date,room:e.room,status:e.status,publicationVersion:e.publications.length})),exam:null,people:[]};
     if(!source||!allowedExam(a,source))return out;
     const e=clone(source);out.exam=e;
     if(['admin','academic'].includes(a.group)){out.people=clone(students);if(a.group==='academic'){delete e.scores;delete e.drafts;delete e.scoreAudit;delete e.corrections;e.publications=e.publications.map(p=>({version:p.version,publishedAt:p.publishedAt}));}return out;}
@@ -163,11 +181,11 @@
         case'assign-staff': group('admin');needs(e.status==='draft','已开放场次请使用人员移交。');needs(d.staff[input.monitor]?.active&&d.staff[input.recorder]?.active,'请选择可用工作人员。');e.staff={invigilator:input.monitor,recorder:input.recorder};e.staffRev++;message='本场岗位已安排。';break;
         case'activate-exam': group('admin','academic');needs(e.status==='draft','本场已开放，无需重复开放。');needs(!prepIssues(e,d).length,'请先处理：'+prepIssues(e,d).join('、'));for(const role of ['invigilator','recorder'])needs(!staffConflict(d,e,e.staff[role],role),'同日期同时间段已有该人员的岗位任务，请调整安排。');e.status='ready';message='本场已开放。学生、监考、录制和评卷老师可从自己的任务列表找到本场。';target='U03';break;
         case'checkin': group('student');person();needs(e.status!=='draft'&&e.status!=='archived','本场尚未开放或已归档。');needs(input.scan==='valid','请扫描本人的本场考场签到码。');if(!r.checkin){r.checkin=true;r.checkinAt=stamp();}message='本人签到已确认，重复操作保留原记录。请按现场安排候考。';target='S04';break;
-        case'draw': group('student');person();needs(r.checkin&&!r.onsiteEnded&&r.attendance!=='absent','请先确认本人签到与候考状态。');needs(!r.draw,'已有本次抽题结果，请查询原记录。');const pool=Object.keys(ExamSpec.papers).map(Number),rand=new Uint32Array(1);crypto.getRandomValues(rand);r.draw=pool[rand[0]%pool.length];r.prepStarted=Date.now();r.drawPending=true;message='抽题请求已登记，请查询本次结果。';break;
+        case'draw': group('student');person();needs(r.checkin&&!r.onsiteEnded&&r.attendance!=='absent','请先确认本人签到与候考状态。');needs(!r.draw,'已有本次抽题结果，请查询原记录。');const pool=Object.keys(ExamSpec.papers).map(Number),rand=new Uint32Array(1);crypto.getRandomValues(rand);r.draw=pool[rand[0]%pool.length];r.prepStarted=clock();r.drawPending=false;message='三科已一次锁定，完整题目与15分钟备稿已同步展示。';break;
         case'query-draw':group('student');person();needs(r.draw,'尚无抽题记录。');r.drawPending=false;message='本次抽取'+r.draw+'号-v1，三科一次确定；查询和刷新不会重抽或重置备稿。';break;
-        case'handoff':group('invigilator');person();needs(!pendingTransfer(e,'invigilator')&&!pendingTransfer(e,'recorder'),'岗位移交待接收，先完成移交后再交接学员。');needs(!e.current,'场内仍有当前学员，请等本位现场结束。');needs(r.checkin&&r.draw&&!r.drawPending&&!r.onsiteEnded&&r.attendance!=='absent','本位签到、抽题确认或候考条件尚未满足。');const next=e.queue.find(id=>!e.records[id].onsiteEnded&&e.records[id].attendance!=='absent');needs(next===p,'请先处理队首学员，过号或调整顺序请登记现场申请。');e.current=p;r.handoff='pending';e.status='live';message='已发出本位交接，等待录制员确认接收。';target='M04';break;
+        case'handoff':group('invigilator');person();needs(!pendingTransfer(e,'invigilator')&&!pendingTransfer(e,'recorder'),'岗位移交待接收，先完成移交后再交接学员。');needs(!e.current,'场内仍有当前学员，请等本位现场结束。');needs(r.checkin&&r.draw&&!r.drawPending&&!r.onsiteEnded&&r.attendance!=='absent','本位签到、抽题确认或候考条件尚未满足。');needs(preparation(r).state==='ready',preparation(r).label+'，请在备稿结束后安排入场。');const next=e.queue.find(id=>!e.records[id].onsiteEnded&&e.records[id].attendance!=='absent');needs(next===p,'请先处理队首学员，过号或调整顺序请登记现场申请。');e.current=p;r.handoff='pending';e.status='live';message='已发出本位交接，等待录制员确认接收。';target='M04';break;
         case'check-device':group('recorder');needs(!busy(e),'当前正在录制或保存，不能切换摄像头或更改设备检查。');needs(input.verified,'请逐项确认固定机位、声音和手机投屏。');needs(!input.lens||['rear','front'].includes(input.lens),'请选择前置或后置摄像头。');e.captureDevice={lens:input.lens||e.captureDevice?.lens||'rear',previewMirror:true};e.deviceChecked=true;message='固定安卓机、镜像预览与大屏投射检查已记录。';break;
-        case'accept-person':group('recorder');person();needs(e.current===p&&r.handoff==='pending'&&e.deviceChecked,'请先完成设备检查并核对待接收学员。');needs(!pendingTransfer(e,'recorder'),'请先完成岗位移交。');r.handoff='accepted';message='本位已接收。场外可查询此回执。';target='A04';break;
+        case'accept-person':group('recorder');person();needs(e.current===p&&r.handoff==='pending'&&e.deviceChecked,'请先完成设备检查并核对待接收学员。');needs(!pendingTransfer(e,'recorder'),'请先完成岗位移交。');needs(preparation(r).state==='ready',preparation(r).label+'，暂不能接收。');r.handoff='accepted';message='本位已接收。场外可查询此回执。';target='A04';break;
         case'start-record':group('recorder');currentPerson();qValid();needs(e.deviceChecked&&!pendingTransfer(e,'recorder'),'请先完成设备检查或待接收的岗位移交。');needs(r.subject===q&&r.stage==='ready'&&!r.files[q],'当前科目不满足开始条件。');r.stage='recording';r.started=Date.now();message='本科录制进行中。';break;
         case'finish-record':group('recorder');currentPerson();needs(r.stage==='recording'&&r.subject===q,'当前没有该科录制。');r.stage='saving';message=input.auto?'本科计时到零，已自动结束，正在保存原文件。':'正在保存本科原文件。离开后可查询原保存结果。';break;
         case'query-save':group('recorder');currentPerson();needs(r.stage==='saving'&&r.subject===q,'没有待查询的本科保存任务。');const ver=r.history[q].length+1;r.files[q]={...fullFile(e,p,q,ver,a.staffId),upload:'none',checked:false,localReviewed:false};r.stage='saved';message='本地已保存。请检查本科结果后加入上传。';break;
@@ -205,7 +223,7 @@
   }
   addEventListener('storage',ev=>{if(ev.key===KEY)notify(false);});
   addEventListener('message',ev=>{if(ev.data?.type==='yf-refresh')listeners.forEach(fn=>fn());});
-  window.YF={KEY,fixture,walk,pageSample,resetPageSample:()=>{if(pageSample)write(pageSeed(pageSample));},advanceWalk,subjects,students,view,run,reset,seed,edit,subscribe:fn=>listeners.add(fn),get state(){const d=read();return {...d,...d.faults};},prepIssues:(examId)=>prepIssues(read().exams[examId],read()),publishIssues:(examId)=>publishIssues(read().exams[examId]),mean:(examId,q,p)=>mean(read().exams[examId],q,p),snapshot};
+  window.YF={KEY,fixture,walk,pageSample,preparation,now:clock,advancePreparationDemo,resetPageSample:()=>{if(pageSample)write(pageSeed(pageSample));},advanceWalk,subjects,students,view,run,reset,seed,edit,subscribe:fn=>listeners.add(fn),get state(){const d=read();return {...d,...d.faults};},prepIssues:(examId)=>prepIssues(read().exams[examId],read()),publishIssues:(examId)=>publishIssues(read().exams[examId]),mean:(examId,q,p)=>mean(read().exams[examId],q,p),snapshot};
   if(pageSample&&!params.has('preview')){try{if(!localStorage.getItem(KEY))write(pageSeed(pageSample));}catch{write(pageSeed(pageSample));}}
   if(walk){try{if(params.get('walkReset')==='1'||!localStorage.getItem(KEY))write(walkSeed(walk));}catch{write(walkSeed(walk));}if(params.has('walkReset')){const u=new URL(location.href);u.searchParams.delete('walkReset');history.replaceState(null,'',u);}}
 })();

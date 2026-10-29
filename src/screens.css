@@ -21,3 +21,12 @@ body{background:var(--background)}.layout{min-height:100vh;display:grid;grid-tem
 
 /* The locked preparation content uses the same two reading parts as Android. */
 .prep-question .paper{white-space:pre-line}
+
+/* Keep the preparation clock beside the active reading task on the student phone. */
+body[data-screen="D01"] .prep-panel{position:sticky;top:0;z-index:15;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;background:#f3f8ee;box-shadow:0 4px 12px #2945240a}
+body[data-screen="D01"] .prep-panel h2{font-size:16px;margin:0}
+body[data-screen="D01"] .prep-timer{grid-column:2;grid-row:1/3;font-size:40px;line-height:1.15;align-self:center;margin:0}
+body[data-screen="D01"] .prep-state{grid-column:1;margin:4px 0;font-size:13px;line-height:1.6}
+body[data-screen="D01"] .prep-panel .fine{grid-column:1/-1;margin:8px 0 0;font-size:12px}
+.prep-recovery{padding:12px 0;border-top:1px solid var(--border)}.prep-recovery summary{cursor:pointer;color:var(--muted);font-size:13px}
+@media(max-width:600px){body[data-screen="D01"] .page-heading h1{font-size:24px}body[data-screen="D01"] .page-heading{margin-bottom:16px}body[data-screen="D01"] .prep-panel{padding:14px}}

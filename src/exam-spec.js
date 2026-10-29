@@ -1,6 +1,6 @@
 /* Fictional prototype content. Business feedback confirmed 2026-10-27. */
 window.ExamSpec={
- version:'0.9.1',durations:[120,60,120],prepSeconds:900,
+ version:'0.10.0',durations:[120,60,120],prepSeconds:900,
  papers:{
   17:['请朗读：清晨，第一缕阳光越过树梢，落在安静的小路上。风吹过草木的气息，把远处的声音轻轻送到耳边。','请播报：今天上午，城市公共阅读空间正式向市民开放。多项阅读活动将持续开展，为社区提供便利服务。','请围绕“如何在快节奏生活中保持专注”进行评述，观点清晰，表达自然。'],
   19:['请朗读：夜色渐深，街角的灯依然亮着。人们带着一天的故事走向家门，熟悉的问候让疲惫慢慢消散。','请播报：本周末，社区文化中心将举办自然观察活动。市民可通过线上预约参与，了解身边的植物与生态。','请围绕“日常生活中的小改变能否带来大影响”进行评述。'],
@@ -13,8 +13,8 @@ window.ExamSpec={
   [['语音与清晰度','吐字清楚，语音规范。'],['信息准确性','事实与关键信息传达准确，不随意增改。'],['播报节奏','语速、停连与新闻语体相适应。']],
   [['观点与结构','观点明确，结构完整，层次清楚。'],['内容与论证','内容切题，论据有效，思考有依据。'],['语言与表达','语言流畅，表达自然，有交流感。']]
  ],
- totalLabel:'参考总分 / 300',totalNote:'三科均分相加，仅作演示参考；正式满分、权重与精度待教研确认。',
+ totalLabel:'模拟总分 / 300',totalNote:'作品朗读、新闻播报、话题评述各100分，合计300分。同科多评委取均分；缺评处理、小数精度及分差提醒阈值按机构最终规则执行。',
  total(values){return values?.length===3&&values.every(v=>v!==null&&v!==''&&Number.isFinite(Number(v)))?values.reduce((n,v)=>n+Number(v),0).toFixed(2):null;},
  time(seconds){const n=Math.max(0,Math.ceil(seconds));return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');},
- paper(id){const p=this.papers[id]||this.papers[17],r=this.readingTexts[id]||this.readingTexts[17];return ['古诗文朗读：'+r.classical+'\n\n现代文朗读：'+r.modern,...p.slice(1)];}
+ paper(id){const p=this.papers[id],r=this.readingTexts[id];if(!p||!r)return Array(3).fill('本次题组或版本未读取到，请联系工作人员核对原记录。');return ['古诗文朗读：'+r.classical+'\n\n现代文朗读：'+r.modern,...p.slice(1)];}
 };
