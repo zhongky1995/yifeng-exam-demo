@@ -38,6 +38,9 @@
  add('W27 W10 W07 W08 W18','post','reviewReady','各科材料与评分已齐，各评委本批已提交。','教务内部核查或筛选统计导出，考生端不显示分数。');
  add('W05 W16 W06 W17','post','reviewBatch','本人负责作品朗读，三份匿名任务中含0分、已评和漏评。','看片可回改当前批，补齐漏评才可提交本批。');
  add('S07 P01','queue','studentArrival','这是后续候选场景。','查看固定备考位或学生自录模拟考规划；没有真实采集上传。');
+ add('S08','post','studentReplay','本人本场三科正式视频已核验且教务已开放；评分与回看独立。','切换三科，在线播放合成视频；仅本人视频，不显示成绩。');
+ add('S08L','post','replayLocked','本人已完成现场考试，教务尚未开放本场回看。','查看等待开放状态，不能播放；开放不依赖评分完成。');
+ add('S08P','post','replayProcessing','本场回看已开放，新闻视频仍处理中，另外两科已就绪。','查看本科处理中状态，切换其他已就绪科目回看。',{q:1});
  const get=id=>entries[id]||null;
  window.ReviewSamples={get,entries,fixture:id=>get(id)?'page-'+id:''};
 })();

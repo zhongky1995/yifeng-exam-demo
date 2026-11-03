@@ -239,6 +239,7 @@
         fillResults(history);
         history.publications = [snapshot(history)];
         history.status = 'archived';
+        history.studentVideoRelease={enabled:true,at:stamp(),by:'academic'};
         if (['queue', 'record', 'transfer', 'incident', 'signed'].includes(preset)) prepare(e);
         if (['queue', 'record', 'transfer', 'incident'].includes(preset))
             for (const p of e.roster) Object.assign(e.records[p], {
@@ -438,6 +439,10 @@
             });
         }
         WorkflowRevision.decorate(d);
+        if(['studentReplay','replayProcessing','replayLocked'].includes(spec.mode)){
+            e.studentVideoRelease={enabled:spec.mode!=='replayLocked',at:stamp(),by:'academic'};e.scores={};e.drafts={};e.opened=[false,false,false];
+            if(spec.mode==='replayProcessing')Object.assign(r.files[1],{upload:'uploading',serverVerified:false,checked:false});
+        }
         if(spec.mode==='reviewBatch'){e.scores['0-0-A'].value=0;delete e.scores['0-0-C'];}
         if(spec.mode==='reviewReady'){WorkflowRevision.markSubmitted(e);e.metricsSynthetic=true;}
         if(spec.mode==='release'){r.files.forEach(f=>{f.upload='uploading';f.serverVerified=false;f.uploadUntil=WorkflowRevision.now(d)+1200;});}
@@ -574,6 +579,10 @@
                     upload: 'uploading',uploadUntil:WorkflowRevision.now(d)+1000,serverVerified:false,
                     checked: false
                 }));
+            } else if(action==='student-videos'&&walk==='student'){
+                if(!e.records.A.onsiteEnded)throw Error('请先接看本人现场结束状态。');
+                for(const r of Object.values(e.records))for(const f of r.files.filter(Boolean))Object.assign(f,{upload:'received',serverVerified:true,checked:true});
+                e.studentVideoRelease={enabled:true,at:stamp(),by:'academic'};
             } else if (action === 'released' && walk === 'recorder') {
                 const r = e.records[e.current];
                 if (!r?.technicalSubmitted) throw Error('先提交三科技术检查。');
@@ -759,6 +768,9 @@
                 [a.studentId]: publicRecord(e.records[a.studentId], source)
             };
             e.roster = [a.studentId];
+            e.replay=WorkflowRevision.studentReplay(source,a.studentId);delete e.studentVideoRelease;
+            for(const k of ['scorePolicy','scoreRev','reportStale','metricsSynthetic','assignmentRev','staffRev','opened'])delete e[k];
+            out.exams.forEach(x=>{const replay=WorkflowRevision.studentReplay(d.exams[x.id],a.studentId);x.videoAvailable=replay.available;x.videoOpened=replay.opened;});
             e.publications = []; out.exams.forEach(x=>delete x.publicationVersion);
             delete e.staff;
             delete e.queue;

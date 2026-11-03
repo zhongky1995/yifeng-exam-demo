@@ -11,6 +11,7 @@
       e.site ??= '示例校区A · 教学楼2层';
       e.batchLabel ??= '上午批';
       e.reportScope ??= '本次考试';
+      e.studentVideoRelease ??= {enabled:false,at:'',by:''};
       e.batches ??= {};
       e.watchRecords ??= {};
       e.metricsSynthetic ??= false;
@@ -27,6 +28,16 @@
       }
     }
     return d;
+  }
+  function studentReplay(e,person) {
+    const r=e.records[person],ended=!!r?.onsiteEnded,opened=!!e.studentVideoRelease?.enabled;
+    const items=subjects.map((subject,q)=>{
+      const f=r?.files[q],blocked=f?.abnormal||e.exceptions.some(x=>x.person===person&&x.q===q&&['material','retake','replace'].includes(x.type)&&['pending','approved','executing','awaiting_material'].includes(x.status));
+      const state=r?.attendance==='absent'?'absent':!ended?'exam_pending':!opened?'not_open':!f||f.upload!=='received'||!f.serverVerified?'processing':!f.checked||blocked?'checking':'ready';
+      const label={absent:'暂无考试录像',exam_pending:'考试尚未结束',not_open:'等待教务开放',processing:'视频处理中',checking:'视频复核中',ready:'可以回看'}[state];
+      return {q,subject,state,label,canPlay:state==='ready',duration:state==='ready'?f.duration:null,version:state==='ready'?f.version:null,playbackId:state==='ready'?f.id:null};
+    });
+    return {ended,opened,releasedAt:opened?e.studentVideoRelease.at:'',available:items.filter(x=>x.canPlay).length,items};
   }
   function batch(e, teacher, q) {
     const assigned = !!e.assignments[q]?.includes(teacher);
@@ -56,6 +67,11 @@
     const {d,e,a,input,p,r,q,needs,group,person,currentPerson,teacher,fullFile,findFile,fileBlocked,onsiteBlocked}=c;
     const result=(message,target)=>({message,target});
     switch(command) {
+      case 'open-student-videos':
+        group('academic');needs(e.status!=='draft','本场尚未开放考试。');needs(e.roster.length&&e.roster.every(id=>e.records[id].onsiteEnded||e.records[id].attendance==='absent'),'按R09建议，本班次现场考试结束后再统一开放本人视频。');
+        needs(input.verified,'请确认本班次现场已结束，并按视频核验状态向本人开放。');
+        if(e.studentVideoRelease.enabled)return result('本场本人视频已开放，保留原开放记录。');
+        e.studentVideoRelease={enabled:true,at:stamp(),by:c.actorId};return result('已按R09建议开放本场本人视频；仅已收到并核验通过的本科可播放，与评分和成绩无关。');
       case 'accept-person':
         group('recorder');person();needs(input.verified,'请先核对考号、机位和原题组，再确认接收。');return null;
       case 'force-end-preparation':
@@ -178,5 +194,5 @@
   function submittedIssues(e) {
     const items=[];for(let q=0;q<3;q++)for(const t of e.assignments[q])if(batch(e,t,q).status!=='submitted')items.push(`${subjects[q]}的评委${t+1}本批未提交`);return items;
   }
-  window.WorkflowRevision={decorate,batch,distribution,markSubmitted,run,pulse,advance,now,localCommands,submittedIssues,batchKey,scoreKey};
+  window.WorkflowRevision={decorate,studentReplay,batch,distribution,markSubmitted,run,pulse,advance,now,localCommands,submittedIssues,batchKey,scoreKey};
 })();
