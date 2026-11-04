@@ -5,7 +5,7 @@
         pageSample = requestedFixture.startsWith('page-') ? window.ReviewSamples?.get(requestedFixture.slice(5)) : null;
     const fixture = pageSample || ['published', 'pending', 'signed', 'record'].includes(requestedFixture) ? requestedFixture : '';
     const walk = ['academic', 'student', 'invigilator', 'recorder', 'teacher', 'admin'].includes(params.get('walk')) ? params.get('walk') : '';
-    const KEY = 'yifeng.frontend.github.v014' + (walk ? ':walk:' + walk : fixture ? ':' + fixture : '');
+    const KEY = 'yifeng.frontend.github.v015' + (walk ? ':walk:' + walk : fixture ? ':' + fixture : '');
     const subjects = ['作品朗读', '新闻播报', '话题评述'];
     const students = [{
         id: 'A',
@@ -183,6 +183,7 @@
     }
     const key = (q, t, p) => `${q}-${t}-${p}`;
     const mean = (e, q, p) => {
+        if(e.records[p]?.attendance==='absent')return null;
         const values = e.assignments[q].map(t => e.scores[key(q, t, p)]?.value);
         return values.length && values.every(Number.isFinite) ? (values.reduce((a, b) => a + b, 0) / values.length).toFixed(2) : null;
     };
@@ -192,6 +193,7 @@
         name: e.name,
         date: e.date,
         publishedAt: stamp(),
+        attendance:Object.fromEntries(e.roster.map(p=>[p,e.records[p].attendance])),
         results: Object.fromEntries(e.roster.map(p => [p, subjects.map((_, q) => mean(e, q, p))]))
     });
 
@@ -438,6 +440,7 @@
                 files: []
             });
         }
+        if(spec.mode==='recorderTransfer'||spec.mode==='monitorTransfer')RoomStaffV14.syncFirst(e);
         WorkflowRevision.decorate(d);
         if(['studentReplay','replayProcessing','replayLocked'].includes(spec.mode)){
             e.studentVideoRelease={enabled:spec.mode!=='replayLocked',at:stamp(),by:'academic'};e.scores={};e.drafts={};e.opened=[false,false,false];
@@ -642,6 +645,7 @@
     }
 
     function write(d) {
+        ExamScopeV15.restore(d);
         WorkflowRevision.decorate(d);
         memory = d;
         try {
@@ -671,11 +675,11 @@
     }
 
     function allowedExam(a, e) {
-        return ['admin', 'academic'].includes(a.group) || a.group === 'teacher' && e.assignments.some(v => v.includes(a.teacher)) || a.group === 'student' && e.status!=='draft' && e.roster.includes(a.studentId) || ['invigilator', 'recorder'].includes(a.group) && (e.staff[a.group] === a.staffId || e.transfers.some(t => t.from === a.staffId || t.to === a.staffId));
+        return ['admin', 'academic'].includes(a.group) || a.group === 'teacher' && e.assignments.some(v => v.includes(a.teacher)) || a.group === 'student' && e.status!=='draft' && e.roster.includes(a.studentId) || ['invigilator', 'recorder'].includes(a.group) && (ExamScopeV15.tasks(e,a).length || e.transfers.some(t => t.from === a.staffId || t.to === a.staffId));
     }
 
     function responsible(a, e) {
-        return ['admin', 'academic'].includes(a.group) || ['invigilator', 'recorder'].includes(a.group) && e.staff[a.group] === a.staffId;
+        return ['admin', 'academic'].includes(a.group) || ['invigilator', 'recorder'].includes(a.group) && ExamScopeV15.owned(a,e,params.get('room')||'');
     }
     const publicRecord = (r, e) => ({
         id: r.id,
@@ -704,7 +708,7 @@
         }))
     });
 
-    function view(actorId, examId = 'EX1') {
+    function view(actorId, examId = 'EX1',scopeKey=examId===(params.get('exam')||'EX1')?(params.get('room')||''):'') {
         const d = read(),
             a = RolePolicy.get(actorId),
             source = d.exams[examId];
@@ -723,10 +727,12 @@
                 publicationVersion: e.publications.length
             })),
             exam: null,
-            people: []
+            people: [],
+            roomTasks: Object.values(d.exams).flatMap(e=>ExamScopeV15.tasks(e,a).map(s=>({...s,examId:e.id,examName:e.name,status:e.status})))
         };
         if (!source || !allowedExam(a, source)) return out;
         const e = clone(source);
+        if(ExamScopeV15.staffRole(a)){const picked=ExamScopeV15.project(e,a,scopeKey);if(!picked&&scopeKey)return out;}
         const rosterPeople=RosterV13.people(d,students,source);
         out.exam = e;
         RosterV13.projection(e,a);
@@ -752,6 +758,7 @@
             out.people = e.roster.map((id,i)=>({id,name:'匿名考生 '+String(i+1).padStart(3,'0'),code:'匿名任务 '+String(i+1).padStart(3,'0')}));
             e.assignedSubjects = e.assignments.map((v, q) => v.includes(a.teacher) ? q : -1).filter(q => q >= 0);
             delete e.staff;
+            delete e.roomStaff; delete e.roomSessions;
             delete e.transfers;
             delete e.queue;
             delete e.current;
@@ -788,11 +795,12 @@
                 [a.studentId]: publicRecord(e.records[a.studentId], source)
             };
             e.roster = [a.studentId];
-            e.replay=WorkflowRevision.studentReplay(source,a.studentId);delete e.studentVideoRelease;
+            e.replay=WorkflowRevision.studentReplay(source,a.studentId);delete e.studentVideoRelease;delete e.studentVideoReleases;
             for(const k of ['setupReview','scorePolicy','scoreRev','reportStale','metricsSynthetic','assignmentRev','staffRev','opened'])delete e[k];
             out.exams.forEach(x=>{const plan=d.exams[x.id].records[a.studentId]?.plan;if(plan)Object.assign(x,{date:plan.date,room:plan.room,batchLabel:plan.batchLabel,slot:plan.slot});const replay=WorkflowRevision.studentReplay(d.exams[x.id],a.studentId);x.videoAvailable=replay.available;x.videoOpened=replay.opened;});
             e.publications = []; out.exams.forEach(x=>delete x.publicationVersion);
             delete e.staff;
+            delete e.roomStaff; delete e.roomSessions;
             delete e.queue;
             delete e.current;
             delete e.transfers;
@@ -807,11 +815,11 @@
         e.publications = [];
         e.transfers = e.transfers.filter(t => t.from === a.staffId || t.to === a.staffId);
         if (a.group === 'invigilator') {
-            out.people = responsible(a, source) ? clone(rosterPeople.filter(p => e.roster.includes(p.id))) : [];
-            e.records = responsible(a, source) ? Object.fromEntries(Object.entries(e.records).map(([p, r]) => [p, publicRecord(r, source)])) : {};
+            out.people = ExamScopeV15.owned(a,source,scopeKey) ? clone(rosterPeople.filter(p => e.roster.includes(p.id))) : [];
+            e.records = ExamScopeV15.owned(a,source,scopeKey) ? Object.fromEntries(Object.entries(e.records).filter(([id])=>e.roster.includes(id)).map(([p, r]) => [p, publicRecord(r, source)])) : {};
             e.exceptions = e.exceptions.filter(v => ['absence', 'reorder', 'redraw', 'return'].includes(v.type));
         } else if (a.group === 'recorder') {
-            const ids = source.roster.filter(p => source.current === p && responsible(a, source) || source.records[p].files.some(f => f?.custodian === a.staffId) || source.records[p].history.some(v => v.some(f => f.custodian === a.staffId)));
+            const ids = source.roster.filter(p => e.current === p && ExamScopeV15.owned(a,source,scopeKey) || source.records[p].files.some(f => f?.custodian === a.staffId) || source.records[p].history.some(v => v.some(f => f.custodian === a.staffId)));
             out.people = clone(rosterPeople.filter(p => ids.includes(p.id)));
             e.records = Object.fromEntries(Object.entries(e.records).filter(([p]) => ids.includes(p)));
             e.roster = ids;
@@ -836,11 +844,8 @@
         let list = [];
         for (const p of e.roster) {
             const r = e.records[p];
+            if(r.attendance==='absent')continue;
             if (!r.onsiteEnded || !r.technicalSubmitted) list.push(`${p}现场技术核验与监考放行未完成`);
-            if (r.attendance === 'absent') {
-                list.push(`${p}缺考的成绩规则待确认`);
-                continue;
-            }
             for (let q = 0; q < 3; q++) {
                 const f = r.files[q];
                 if (!f || f.abnormal || f.upload !== 'received' || !f.checked || !e.opened[q] || fileBlocked(e, p, q)) list.push(`${p}的${subjects[q]}材料未就绪`);
@@ -860,20 +865,21 @@
     }
 
     function busy(e) {
-        return e.current && ['recording', 'saving'].includes(e.records[e.current].stage);
+        return e.current && ['intro', 'recording', 'saving'].includes(e.records[e.current].stage);
     }
 
     function pendingTransfer(e, role) {
-        return e.transfers.some(t => t.role === role && t.status === 'pending');
+        return e.transfers.some(t => t.role === role && t.status === 'pending'&&(!e.scope||(t.roomKey||RoomStaffV14.rooms(e)[0].key)===e.scope.key));
     }
 
     function staffConflict(d, e, id, role) {
-        return Object.values(d.exams).some(x => x.id !== e.id && x.status !== 'archived' && x.status !== 'draft' && x.date === e.date && x.slot === e.slot && x.staff[role] === id);
+        const own=e.scope?[e.scope]:RoomStaffV14.rooms(e).filter(r=>Object.values(e.roomStaff[r.key]||{}).includes(id));return Object.values(d.exams).some(x=>x.id!==e.id&&!['archived','draft'].includes(x.status)&&RoomStaffV14.rooms(x).some(r=>Object.values(x.roomStaff[r.key]||{}).includes(id)&&own.some(s=>s.date===r.date&&s.start<r.end&&r.start<s.end)));
     }
 
     function invalidate(e, p, q, reason) {
         for (const t of e.assignments[q]) {
             const k = key(q, t, p);
+            delete e.drafts[k];
             if (e.scores[k]) {
                 e.scoreAudit.push({
                     key: k,
@@ -885,6 +891,7 @@
             }
         }
         e.opened[q] = false;
+        e.reportStale=true;
         e.scoreRev++;
     }
 
@@ -934,6 +941,8 @@
                 };
             }
             needs(e && allowedExam(a, e), '当前身份没有这场考试的任务。');
+            if(a.group==='admin'&&command==='decide-exception'){const x=e.exceptions.find(x=>x.id===input.id);if(x)ExamScopeV15.beginForPerson(e,x.person);}
+            if(ExamScopeV15.staffRole(a)){const selected=ExamScopeV15.begin(e,a,input.roomKey||params.get('room')||'');if(!selected)needs(['accept-transfer','reject-transfer','cancel-transfer'].includes(command),'这不是本人负责的班次考场，请从岗位任务进入。');}
             needs(e.status !== 'archived', '这场考试已归档，当前仅可查阅历史记录。');
             needs(!d.faults.permission, '当前任务授权待核对，请联系管理员。');
             if (['recorder', 'invigilator'].includes(a.group) && !['create-transfer', 'accept-transfer', 'reject-transfer', 'cancel-transfer'].includes(command)) {
@@ -944,7 +953,8 @@
                 q = Number.isInteger(+input.q) ? +input.q : 0;
             if (a.group === 'student') needs(p === a.studentId, '只能处理本人的本场记录。');
             const qValid = () => needs(q >= 0 && q < 3, '科目不正确。');
-            const person = () => needs(r, '这名学员不在本场名单中。');
+            const person = () => {needs(r, '这名学员不在本场名单中。');if(ExamScopeV15.staffRole(a))needs(ExamScopeV15.isMember(e,p),'这名考生不在本人当前班次考场。');};
+            if(ExamScopeV15.staffRole(a)&&input.fileId){const f=findFile(e,input.fileId);if(f)needs(ExamScopeV15.isMember(e,f.person),'这份文件不在本人当前班次考场。');}
             const currentPerson = () => {
                 person();
                 needs(e.current === p && r.handoff === 'accepted', '请先接收本场当前学员。');
@@ -956,6 +966,7 @@
                 needs(e.assignments[q].includes(a.teacher), '本科目未分配给本人。');
             };
             if(command==='invalidate-exam-schedule'){group('academic','admin');needs(e.status==='draft','已开放的安排不能修改。');needs(input.expectedRosterRev===(e.rosterRev||1)&&input.expectedScheduleRev===(e.scheduleRev||0),'安排已有新版本，请刷新后重新核对。');e.arrangementConfirmed=false;e.setupReview=null;write(d);return {ok:true,message:'安排草稿已修改，请重新确认。'};}
+            if(command==='invalidate-room-staff'){group('academic','admin');needs(e.status==='draft','本场已开放，不能改考前岗位。');e.setupReview=null;write(d);return {ok:true,message:'岗位有未保存修改，请先保存并重新核对。'};}
             if(command==='save-room-staff'){const result=RoomStaffV14.save({e,d,input,needs,group});log(result.message);write(d);return {ok:true,...result,examId:e.id};}
             const rosterCommand=command==='import-excel-roster'?RosterV13.importRows:command==='save-exam-schedule'?RosterV13.saveSchedule:null;
             if(rosterCommand){const result=rosterCommand({d,e,a,input,needs,group,record,base:students});log(result.message);write(d);return {ok:true,...result,examId:e.id};}
@@ -1020,14 +1031,14 @@
                     group('admin', 'academic');
                     needs(e.status === 'draft', '本场已开放，无需重复开放。');
                     needs(!prepIssues(e, d).length, '请先处理：' + prepIssues(e, d).join('、'));
-                    for (const role of ['invigilator', 'recorder']) needs(!staffConflict(d, e, e.staff[role], role), '同日期同时间段已有该人员的岗位任务，请调整安排。');
+                    for(const room of RoomStaffV14.rooms(e))for (const role of ['invigilator', 'recorder']) needs(!staffConflict(d, e, e.roomStaff[room.key][role], role), '同日期同时间段已有该人员的岗位任务，请调整安排。');
                     e.status = 'ready';
                     message = '本场已开放。学生、监考、录制和评卷老师可从自己的任务列表找到本场。';
                     target = 'U03';
                     break;
                 case 'checkin':
                     group('student');
-                    person();
+                    person();needs(r.attendance!=='absent','已登记缺考；如需恢复，请联系监考核对原安排。');
                     needs(e.status !== 'draft' && e.status !== 'archived', '本场尚未开放或已归档。');
                     needs(input.scan === 'valid', '请扫描本人的本场考场签到码。');
                     if (!r.checkin) {
@@ -1215,9 +1226,9 @@
                 case 'open-subject':
                     group('admin', 'academic');
                     qValid();
-                    needs(e.roster.length && e.roster.every(p => e.records[p].onsiteEnded && e.records[p].technicalSubmitted && e.records[p].files[q]?.checked && !fileBlocked(e, p, q)), '本科仍有缺视频、异常或未核验材料，请按完整名单处理。');
+                    needs(e.roster.length && e.roster.every(p => e.records[p].attendance==='absent'||e.records[p].onsiteEnded && e.records[p].technicalSubmitted && e.records[p].files[q]?.checked && !fileBlocked(e, p, q)), '本科仍有缺视频、异常或未核验材料，请按完整名单处理。');
                     e.opened[q] = true;
-                    message = '本科已开放，每位分配老师均评本科全部学员。';
+                    message = '本科已开放，正式缺考单列不计应评；其余考生仍须材料齐备并有效评分。';
                     break;
                 case 'draft-score':
                     teacher();
@@ -1347,6 +1358,7 @@
                         const t = {
                             id: id('TR'),
                             role,
+                            roomKey:e.scope?.key||RoomStaffV14.rooms(e)[0].key,
                             from: e.staff[role],
                             to: input.to,
                             reason: input.reason.trim(),
@@ -1403,7 +1415,7 @@
                 case 'disable-staff':
                     group('admin');
                     needs(d.staff[input.staffId], '账号不存在。');
-                    needs(!Object.values(d.exams).some(x => x.status !== 'archived' && (Object.values(x.staff).includes(input.staffId) || x.transfers.some(t => t.status === 'pending' && t.to === input.staffId))), '该账号仍有场次岗位或待接收任务，请先完成各岗位移交。');
+                    needs(!Object.values(d.exams).some(x => x.status !== 'archived' && (Object.values(x.roomStaff||{}).some(s=>Object.values(s).includes(input.staffId)) || x.transfers.some(t => t.status === 'pending' && t.to === input.staffId))), '该账号仍有场次岗位或待接收任务，请先完成各岗位移交。');
                     d.staff[input.staffId].active = false;
                     message = '账号已停用，历史移交和原文件记录保留。';
                     break;
@@ -1494,11 +1506,11 @@
                             x.status = 'executing';
                         } else if (x.type === 'absence') {
                             needs(e.current !== x.person, '该学员仍在场内，不能直接标记缺考。');
-                            rr.attendance = 'absent';
+                            needs(!rr.onsiteEnded&&!rr.technicalSubmitted&&rr.handoff!=='accepted','已有现场考试记录，不能直接改为缺考，请先核对原记录。');rr.attendance = 'absent';e.reportStale=true;
                             x.status = 'resolved';
                         } else if (x.type === 'return') {
                             needs(rr.attendance === 'absent', '当前学员没有缺考状态。');
-                            rr.attendance = 'normal';
+                            rr.attendance = 'normal';e.opened=[false,false,false];e.reportStale=true;
                             e.queue = e.queue.filter(p => p !== x.person);
                             e.queue.push(x.person);
                             x.status = 'resolved';
@@ -1547,7 +1559,7 @@
     window.YF = {
         KEY,
         pulse:()=>{const d=read();if(WorkflowRevision.pulse(d,{fullFile}))write(d);},
-        advanceRecordingDemo:()=>{if(!fixture&&!walk)return {ok:false,message:'仅在独立样例中模拟时间。'};const d=read(),e=d.exams.EX1;const advance=WorkflowRevision.advance(d,e);if(!advance.ok)return advance;WorkflowRevision.pulse(d,{fullFile});write(d);return {ok:true,message:'已推进本阶段演示时钟；仍按原保存和缓冲条件接续。'};},
+        advanceRecordingDemo:()=>{if(!fixture&&!walk)return {ok:false,message:'仅在独立样例中模拟时间。'};const d=read(),e=d.exams.EX1;const a=RolePolicy.get(params.get('as')||'recorder');if(ExamScopeV15.staffRole(a))ExamScopeV15.begin(e,a,params.get('room')||'');const advance=WorkflowRevision.advance(d,e);if(!advance.ok)return advance;WorkflowRevision.pulse(d,{fullFile});write(d);return {ok:true,message:'已推进本阶段演示时钟；仍按原保存和缓冲条件接续。'};},
         fixture,
         walk,
         pageSample,

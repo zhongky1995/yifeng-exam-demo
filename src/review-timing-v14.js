@@ -1,6 +1,6 @@
 /* Browser-local active review time. No server telemetry or identity service. */
 (()=>{'use strict';let H=null,current=null;const records=new Map();
- const storageKey=(h,p,q)=>YF.KEY+':reviewTime:'+h.examId+':'+q+':'+h.actor.teacher+':'+p;
+ const storageKey=(h,p,q)=>YF.KEY+':reviewTime:'+h.examId+':'+q+':'+h.actor.teacher+':'+p+':v'+(h.exam()?.records?.[p]?.files?.[q]?.version||0);
  function flush(){if(!current)return;const at=Date.now(),s=current.value,video=document.querySelector('.review-video-card video'),playing=video&&!video.paused&&!video.ended;
   if(H?.screen==='W06'&&!H.preview&&!H.saving&&!document.hidden&&H.exam()?.batches?.[H.qValue()+'-'+H.actor.teacher]?.status!=='submitted'){
    const end=playing?at:Math.min(at,s.activity+60000);s.totalMs+=Math.max(0,end-s.last);if(playing)s.activity=at;

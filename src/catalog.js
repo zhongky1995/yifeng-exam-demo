@@ -716,7 +716,7 @@ window.Catalog=[
     "id": "W09",
     "as": "admin",
     "title": "账号岗位详情",
-    "sub": "兼岗、停用与未完任务",
+    "sub": "逐考场双岗配置，保存后重新核对",
     "device": "desktop",
     "phase": 5,
     "f": "F01–F09",

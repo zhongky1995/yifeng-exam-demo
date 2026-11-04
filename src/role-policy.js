@@ -17,7 +17,7 @@
  studentA:{id:'studentA',label:'学生A',name:'示例学员A',group:'student',studentId:'A',home:'S00'},
  studentB:{id:'studentB',label:'学生B',name:'示例学员B',group:'student',studentId:'B',home:'S00'},
  studentC:{id:'studentC',label:'学生C',name:'示例学员C',group:'student',studentId:'C',home:'S00'}
- };Object.values(actors).forEach(a=>a.pages=groups[a.group]);
+ };const staffLabels=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸','十一','十二'];for(let i=3;i<=12;i++)for(const role of ['invigilator','recorder']){const id=role+'-staff'+i;actors[id]={id,label:(role==='invigilator'?'监考员':'录制员')+staffLabels[i-1],name:'工作人员'+staffLabels[i-1],group:role,staffId:'staff'+i,home:role==='invigilator'?'M00':'A00'};}Object.values(actors).forEach(a=>a.pages=groups[a.group]);
  const get=id=>actors[id]||{id:'unknown',name:'未识别身份',label:'未识别身份',group:'unknown',home:'U02',pages:[]};
  window.RolePolicy={actors,get,canOpen:(id,p)=>get(id).pages.includes(p),defaultActor:p=>/^S|^D/.test(p)?'studentA':/^A/.test(p)?'recorder':/^M/.test(p)?'invigilator':['W05','W06','W16','W17'].includes(p)?'teacher1':['U03','W01','W04','W07','W08','W10','W11','W12','W14','W18','W26','W27','P01'].includes(p)?'academic':'admin'};
 })();
