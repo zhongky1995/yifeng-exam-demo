@@ -11,6 +11,7 @@
       e.site ??= '示例校区A · 教学楼2层';
       e.batchLabel ??= '上午批';
       e.reportScope ??= '本次考试';
+      e.setupReview ??= null;
       e.studentVideoRelease ??= {enabled:false,at:'',by:''};
       e.batches ??= {};
       e.watchRecords ??= {};
@@ -44,7 +45,7 @@
     const missing = [], scored = [];
     for (const person of e.roster) {
       const score = e.scores[scoreKey(q,teacher,person)], f = e.records[person]?.files[q];
-      const valid = score && Number.isFinite(score.value) && f && score.videoVersion === f.version && f.checked && !f.abnormal && !e.exceptions.some(x=>x.person===person&&x.q===q&&['pending','approved','executing','awaiting_material'].includes(x.status)&&['material','retake','replace'].includes(x.type));
+      const valid = score && Number.isFinite(score.value) && f && score.videoVersion === f.version && f.checked && !f.abnormal && !e.blockedFiles?.includes(person+'-'+q) && !e.exceptions.some(x=>x.person===person&&x.q===q&&['pending','approved','executing','awaiting_material'].includes(x.status)&&['material','retake','replace'].includes(x.type));
       (valid ? scored : missing).push(person);
     }
     const meta = e.batches?.[batchKey(q,teacher)] || {status:'draft',revision:0,history:[]};
@@ -52,8 +53,12 @@
   }
   function distribution(e,teacher,q) {
     const b=batch(e,teacher,q),values=b.scored.map(p=>e.scores[scoreKey(q,teacher,p)].value);
-    const buckets=[[0,60,false],[60,80,false],[80,90,false],[90,100,true]].map(([lower,upper,inclusive])=>({lower,upper,inclusive,count:values.filter(v=>v>=lower&&(inclusive?v<=upper:v<upper)).length}));
+    const buckets=[[0,60,false],[60,70,false],[70,80,false],[80,90,false],[90,100,true]].map(([lower,upper,inclusive])=>({lower,upper,inclusive,count:values.filter(v=>v>=lower&&(inclusive?v<=upper:v<upper)).length}));
     return {...b,values,buckets};
+  }
+  function recentScores(e,teacher,q,limit=15){
+    const valid=batch(e,teacher,q).scored;
+    return valid.map(person=>({person,...e.scores[scoreKey(q,teacher,person)]})).sort((a,b)=>((b.updatedAtMs??Date.parse((b.updatedAt||'').replace(' ','T')))||0)-((a.updatedAtMs??Date.parse((a.updatedAt||'').replace(' ','T')))||0)||(b.saveOrder||0)-(a.saveOrder||0)).slice(0,limit);
   }
   function markSubmitted(e) {
     for (let q=0;q<3;q++) for (const t of e.assignments[q]) {
@@ -62,11 +67,15 @@
     }
   }
   const validScore = value => value !== '' && value !== null && value !== undefined && /^\d+(\.\d{1,2})?$/.test(String(value)) && Number(value)>=0 && Number(value)<=100;
-  const localCommands = ['force-end-preparation','start-record','finish-record','end-subject-early','query-save','retry-save','pause-sequence','next-subject','verify-local','draft-score'];
+  const localCommands = ['intro-audio-started','intro-audio-finished','intro-audio-failed','restart-intro-audio','force-end-preparation','start-record','finish-record','end-subject-early','query-save','retry-save','pause-sequence','next-subject','verify-local','draft-score'];
   function run(command,c) {
     const {d,e,a,input,p,r,q,needs,group,person,currentPerson,teacher,fullFile,findFile,fileBlocked,onsiteBlocked}=c;
     const result=(message,target)=>({message,target});
     switch(command) {
+      case 'confirm-exam-setup':
+        group('academic','admin');needs(e.status==='draft','本场已开放，此处查看已确认的准备结果。');needs(e.roster.length&&e.paperSelected&&e.paperComplete,'请先导入名单并选择完整套卷，再核对岗位和评分分工。');
+        needs(d.staff[e.staff.invigilator]?.active&&d.staff[e.staff.recorder]?.active,'现场岗位尚未安排有效人员。');needs(e.assignments.every(v=>v.length)&&new Set(e.assignments.flat()).size===e.assignments.flat().length,'请按单老师单科核对全部评分分工。');needs(input.verified,'请确认岗位及评分分工已核对。');
+        e.setupReview={staffRev:e.staffRev,assignmentRev:e.assignmentRev,at:stamp(),by:c.actorId};return result('岗位和评分分工已核对，继续检查并开放本场。','W01');
       case 'open-student-videos':
         group('academic');needs(e.status!=='draft','本场尚未开放考试。');needs(e.roster.length&&e.roster.every(id=>e.records[id].onsiteEnded||e.records[id].attendance==='absent'),'按R09建议，本班次现场考试结束后再统一开放本人视频。');
         needs(input.verified,'请确认本班次现场已结束，并按视频核验状态向本人开放。');
@@ -81,8 +90,16 @@
         return result('已按方案R01结束该生备考，原自然截止与原因保留；仍需监考叫号交接。');
       case 'start-record':
         group('recorder');currentPerson();needs(e.deviceChecked,'请先完成设备检查。');needs(r.stage==='ready'&&!r.files[q]&&r.subject===q,'当前科目尚不具备启动条件。');
-        r.autoSequence=true;r.pauseNext=false;r.stage='intro';r.phaseDeadline=now(d)+3000;
-        return result('本次三科考试已启动，3秒提示后开录；后续保存成功再走6秒缓冲。');
+        r.autoSequence=true;r.pauseNext=false;r.stage='intro';r.introAudioOwner=input.audioOwner||'';r.introState=input.audioOwner?'awaiting_audio':'demo';r.introStarted=input.audioOwner?0:now(d);r.phaseDeadline=input.audioOwner?0:now(d)+ExamSpec.introCue.totalMs;
+        return result('本次三科考试已启动：准备语音 → 3、2、1 → 开始；播报结束后才开始本科计时。');
+      case 'restart-intro-audio':
+        group('recorder');currentPerson();needs(r.stage==='intro'&&input.audioOwner,'当前没有待重播的首科提示。');r.introAudioOwner=input.audioOwner;r.introState='awaiting_audio';r.introStarted=0;r.phaseDeadline=0;return result('重新播放开考提示，正式录制尚未开始。');
+      case 'intro-audio-started':
+        group('recorder');currentPerson();needs(r.stage==='intro'&&r.introAudioOwner===input.audioOwner,'当前提示已变化。');r.introState='playing';r.introStarted=now(d);r.phaseDeadline=now(d)+ExamSpec.introCue.totalMs;return result('正在播报开考提示。');
+      case 'intro-audio-finished':
+        group('recorder');currentPerson();needs(r.stage==='intro'&&r.introAudioOwner===input.audioOwner&&r.introState==='playing','当前提示尚未完整播放。');r.stage='recording';r.started=now(d);r.captureDeadline=now(d)+ExamSpec.durations[r.subject]*1000;r.introState='finished';return result('开考提示已播放完毕，本科正式录制开始。');
+      case 'intro-audio-failed':
+        group('recorder');currentPerson();needs(r.stage==='intro'&&r.introAudioOwner===input.audioOwner,'当前提示已变化。');r.introState='audio_failed';r.phaseDeadline=0;return result('开考提示未能播放完成，请点击重播。正式计时尚未开始。');
       case 'finish-record': case 'end-subject-early':
         group('recorder');currentPerson();needs(r.stage==='recording'&&r.subject===q,'当前没有正在录制的本科。');
         if(command==='end-subject-early')needs(input.reason?.trim(),'请说明提前结束原因。');
@@ -133,7 +150,7 @@
         teacher();const b=batch(e,a.teacher,q),f=r.files[q],key=scoreKey(q,a.teacher,p);needs(b.status!=='submitted','当前批已提交，普通入口只读；请由教务按建议退回。');
         needs(e.opened[q]&&f?.checked&&!f.abnormal&&!fileBlocked(e,p,q),'当前材料未开放、失效或有问题，不能用填分代替处理。');needs(validScore(input.value),'请填写0–100分，最多两位小数为演示口径；空白不能当成0。');needs(!d.faults.saveFail,'评分保存失败，原输入保留，可在原任务重试。');
         const old=e.scores[key],value=Number(input.value);if(old)e.scoreAudit.push({key,...structuredClone(old),newValue:value,reason:'当前批本人回改',at:stamp(),by:actorIdOrName(c)});
-        e.scores[key]={value,videoVersion:f.version,revision:(old?.revision||0)+1,updatedAt:stamp()};delete e.drafts[key];e.scoreRev++;
+        e.scores[key]={value,videoVersion:f.version,revision:(old?.revision||0)+1,updatedAt:stamp(),updatedAtMs:Date.now(),saveOrder:++d.seq};delete e.drafts[key];e.scoreRev++;
         return result(old?`本人当前批评分已从${old.value}改为${value}分，原值与修订保留。`:`本人${value}分已保存；0分有效，当前批内仍可回改。`);
       }
       case 'submit-review-batch': {
@@ -156,7 +173,7 @@
       }
       case 'save-exam':
         group('admin','academic');needs(e.status==='draft','已开放场次保留原安排，不能直接覆盖。');needs(input.name?.trim()&&input.date,'请填写考试名称和日期。');
-        Object.assign(e,{name:input.name.trim(),date:input.date,room:input.room||e.room,site:input.site?.trim()||e.site,batchLabel:input.batchLabel?.trim()||e.batchLabel,slot:input.slot?.trim()||e.slot,prepSaved:true});return result('考点、班次、考场与到场时间已保存，学生考前可以查看本人安排。');
+        Object.assign(e,{name:input.name.trim(),date:input.date,room:input.room||e.room,site:input.site?.trim()||e.site,batchLabel:input.batchLabel?.trim()||e.batchLabel,slot:input.slot?.trim()||e.slot,prepSaved:true});return result('考前安排已保存，接下来选择完整套卷。','W03');
       default:return null;
     }
   }
@@ -167,7 +184,7 @@
       if(e.status==='archived')continue;
       const r=e.current&&e.records[e.current];
       if(r?.handoff==='accepted'&&!r.technicalSubmitted) {
-        if(['intro','buffer'].includes(r.stage)&&r.phaseDeadline<=at){r.stage='recording';r.started=at;r.captureDeadline=at+ExamSpec.durations[r.subject]*1000;changed=true;}
+        if(['intro','buffer'].includes(r.stage)&&r.phaseDeadline>0&&r.phaseDeadline<=at&&!(r.stage==='intro'&&r.introAudioOwner)){r.stage='recording';r.started=at;r.captureDeadline=at+ExamSpec.durations[r.subject]*1000;changed=true;}
         else if(r.stage==='recording'&&(r.captureDeadline||r.started+ExamSpec.durations[r.subject]*1000)<=at){r.stage='saving';r.stopDuration=ExamSpec.durations[r.subject];r.stopReason='本科到时';r.endedAt=at;r.saveAt=at+650;changed=true;}
         else if(r.stage==='saving'&&r.saveAt<=at){
           if(d.faults.saveFail){r.stage='save_failed';changed=true;continue;}
@@ -188,11 +205,12 @@
   function advance(d,e) {
     const r=e.current&&e.records[e.current];if(!r)return {ok:false,message:'当前没有场内任务。'};
     if(!['intro','buffer','recording','saving'].includes(r.stage))return {ok:false,message:'当前等待人工或故障恢复，不推进业务条件。'};
+    if(r.stage==='intro'&&r.introAudioOwner){r.introAudioOwner='';r.introState='demo';r.introStarted=now(d);r.phaseDeadline=now(d)+ExamSpec.introCue.totalMs;}
     const at=now(d),end=r.stage==='recording'?(r.captureDeadline||r.started+ExamSpec.durations[r.subject]*1000):r.stage==='saving'?r.saveAt:r.phaseDeadline;
     d.captureTimeOffset=(d.captureTimeOffset||0)+Math.max(0,end-at)+1;return {ok:true,message:'仅推演时钟已推进到本阶段结束，原任务和题组不变。'};
   }
   function submittedIssues(e) {
     const items=[];for(let q=0;q<3;q++)for(const t of e.assignments[q])if(batch(e,t,q).status!=='submitted')items.push(`${subjects[q]}的评委${t+1}本批未提交`);return items;
   }
-  window.WorkflowRevision={decorate,studentReplay,batch,distribution,markSubmitted,run,pulse,advance,now,localCommands,submittedIssues,batchKey,scoreKey};
+  window.WorkflowRevision={decorate,studentReplay,batch,distribution,recentScores,markSubmitted,run,pulse,advance,now,localCommands,submittedIssues,batchKey,scoreKey};
 })();

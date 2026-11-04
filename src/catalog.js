@@ -24,17 +24,6 @@ window.Catalog=[
     "y": 145
   },
   {
-    "id": "W01",
-    "as": "academic",
-    "title": "本场准备",
-    "sub": "准备清单与完成依据",
-    "device": "desktop",
-    "phase": 0,
-    "f": "F01–F09",
-    "x": 1660,
-    "y": 145
-  },
-  {
     "id": "W11",
     "as": "academic",
     "title": "本场名单导入",
@@ -42,7 +31,7 @@ window.Catalog=[
     "device": "desktop",
     "phase": 0,
     "f": "F01–F09",
-    "x": 2460,
+    "x": 1660,
     "y": 145
   },
   {
@@ -53,8 +42,8 @@ window.Catalog=[
     "device": "desktop",
     "phase": 0,
     "f": "F01–F09",
-    "x": 60,
-    "y": 795
+    "x": 2460,
+    "y": 145
   },
   {
     "id": "W03",
@@ -64,7 +53,29 @@ window.Catalog=[
     "device": "desktop",
     "phase": 0,
     "f": "F01–F09",
+    "x": 60,
+    "y": 795
+  },
+  {
+    "id": "W09A",
+    "screen": "W09",
+    "as": "academic",
+    "title": "核对岗位和评分分工",
+    "sub": "完整套卷后核对，再进入最终开场检查",
+    "device": "desktop",
+    "phase": 0,
     "x": 860,
+    "y": 795
+  },
+  {
+    "id": "W01",
+    "as": "academic",
+    "title": "检查并开放本场",
+    "sub": "名单/安排/套卷/岗位分工齐备后开放",
+    "device": "desktop",
+    "phase": 0,
+    "f": "F01–F09",
+    "x": 1660,
     "y": 795
   },
   {
@@ -75,7 +86,7 @@ window.Catalog=[
     "device": "desktop",
     "phase": 0,
     "f": "F01–F09",
-    "x": 1660,
+    "x": 2460,
     "y": 795
   },
   {
@@ -86,8 +97,8 @@ window.Catalog=[
     "device": "desktop",
     "phase": 0,
     "f": "F01–F09",
-    "x": 2460,
-    "y": 795
+    "x": 60,
+    "y": 1445
   },
   {
     "id": "W14",
@@ -97,7 +108,7 @@ window.Catalog=[
     "device": "desktop",
     "phase": 0,
     "f": "F01–F09",
-    "x": 60,
+    "x": 860,
     "y": 1445
   },
   {
@@ -108,7 +119,7 @@ window.Catalog=[
     "device": "desktop",
     "phase": 0,
     "f": "F01–F09",
-    "x": 860,
+    "x": 1660,
     "y": 1445
   },
   {
@@ -119,7 +130,7 @@ window.Catalog=[
     "device": "desktop",
     "phase": 0,
     "f": "F01–F09",
-    "x": 1660,
+    "x": 2460,
     "y": 1445
   },
   {
@@ -130,8 +141,8 @@ window.Catalog=[
     "device": "desktop",
     "phase": 0,
     "f": "F01–F09",
-    "x": 2460,
-    "y": 1445
+    "x": 60,
+    "y": 2095
   },
   {
     "id": "W18",
@@ -141,7 +152,7 @@ window.Catalog=[
     "device": "desktop",
     "phase": 0,
     "f": "F01–F09",
-    "x": 60,
+    "x": 860,
     "y": 2095
   },
   {
@@ -152,7 +163,7 @@ window.Catalog=[
     "device": "desktop",
     "kind": "",
     "phase": 0,
-    "x": 860,
+    "x": 1660,
     "y": 2095
   },
   {
@@ -164,7 +175,7 @@ window.Catalog=[
     "phase": 0,
     "f": "F01–F09",
     "as": "academic",
-    "x": 1660,
+    "x": 2460,
     "y": 2095
   },
   {
@@ -175,8 +186,8 @@ window.Catalog=[
     "device": "desktop",
     "phase": 0,
     "f": "F01–F09",
-    "x": 2460,
-    "y": 2095,
+    "x": 60,
+    "y": 2745,
     "screen": "X01"
   },
   {
@@ -187,7 +198,7 @@ window.Catalog=[
     "device": "mobile",
     "kind": "candidate",
     "phase": 0,
-    "x": 60,
+    "x": 860,
     "y": 2745
   },
   {
@@ -495,7 +506,7 @@ window.Catalog=[
     "id": "A02",
     "as": "recorder",
     "title": "三科自动录制工作台",
-    "sub": "一次启动、单科提前结束、科间6秒",
+    "sub": "首科语音准备与倒计时、投屏大字，正式时限保持",
     "device": "desktop",
     "phase": 3,
     "f": "F01–F09",
@@ -506,7 +517,7 @@ window.Catalog=[
     "id": "A07",
     "as": "recorder",
     "title": "横屏考试与投屏",
-    "sub": "题目居中、朗读上下布局、大倒计时",
+    "sub": "首科语音准备与倒计时、投屏大字，正式时限保持",
     "device": "landscape",
     "phase": 3,
     "f": "F05",
@@ -622,8 +633,8 @@ window.Catalog=[
   {
     "id": "W06",
     "as": "teacher1",
-    "title": "匿名看片评分",
-    "sub": "可拖动视频，当前批可回改",
+    "title": "匿名看片与评分",
+    "sub": "放大视频、最近15份纵向评分、分段筛选、紧凑右下打分",
     "device": "desktop",
     "phase": 4,
     "f": "F01–F09",
@@ -791,4 +802,4 @@ window.Phases=["教务 · 安排、核验与数据统计","学生 · 考前安�
 window.CanvasRows=[{"top":82,"text":"准备考点与班次，考后核验材料、跟进本批提交并查看数据报表。"},{"top":3432,"text":"考前查看安排，现场扫码签到、抽题统一备考，跟进参加进度，考后回看本人视频。"},{"top":5482,"text":"组织签到候考、核对交接、集中监督上传，最后确认放行。"},{"top":7532,"text":"核验考号与机位，一次启动三科，检查原片后提交监考。"},{"top":9582,"text":"匿名看片、保存与回改当前批分数，漏评检查后提交整批。"},{"top":10982,"text":"维护账号与现场岗位，按单老师单科安排评分分工。"}];
 window.CanvasSize={"width":3300,"height":13095};
 window.CatalogAliases={"U01":"U02","U01A":"U02A","U01T":"W05","U01T2":"W05T2","W02":"W12","W15":"X01A","W15T":"X01T"};
-window.CoreRoutes=[["U02A","U04A","W01","W11","W12","W03","U03","W04","W14","W10","W07","W08","W18","W27"],["S00","S01","S03","S04","D01","S06","S08"],["M00","M01","M03","M02","M04","M06"],["A00","A01","A04","A02","A07","A06","A03"],["W05","W16","W06","W17"],["U02","U03A","W19","W09","W13"]];
+window.CoreRoutes=[["U02A","U04A","W11","W12","W03","W09A","W01","U03","W04","W14","W10","W07","W08","W18","W27"],["S00","S01","S03","S04","D01","S06","S08"],["M00","M01","M03","M02","M04","M06"],["A00","A01","A04","A02","A07","A06","A03"],["W05","W16","W06","W17"],["U02","U03A","W19","W09","W13"]];

@@ -5,7 +5,7 @@
         pageSample = requestedFixture.startsWith('page-') ? window.ReviewSamples?.get(requestedFixture.slice(5)) : null;
     const fixture = pageSample || ['published', 'pending', 'signed', 'record'].includes(requestedFixture) ? requestedFixture : '';
     const walk = ['academic', 'student', 'invigilator', 'recorder', 'teacher', 'admin'].includes(params.get('walk')) ? params.get('walk') : '';
-    const KEY = 'yifeng.frontend.github.v011' + (walk ? ':walk:' + walk : fixture ? ':' + fixture : '');
+    const KEY = 'yifeng.frontend.github.v012' + (walk ? ':walk:' + walk : fixture ? ':' + fixture : '');
     const subjects = ['作品朗读', '新闻播报', '话题评述'];
     const students = [{
         id: 'A',
@@ -293,7 +293,7 @@
             });
         }
         return {
-            version: 11,
+            version: 12,
             seq: 20,
             examSeq: 2,
             exams: {
@@ -443,7 +443,14 @@
             e.studentVideoRelease={enabled:spec.mode!=='replayLocked',at:stamp(),by:'academic'};e.scores={};e.drafts={};e.opened=[false,false,false];
             if(spec.mode==='replayProcessing')Object.assign(r.files[1],{upload:'uploading',serverVerified:false,checked:false});
         }
-        if(spec.mode==='reviewBatch'){e.scores['0-0-A'].value=0;delete e.scores['0-0-C'];}
+        if(spec.mode==='reviewBatch'){
+            const ids=['A','B','C',...Array.from({length:17},(_,i)=>'D'+String(i+4).padStart(2,'0'))];e.roster=ids;e.queue=[...ids];e.scores={};e.drafts={};e.opened=[true,true,true];
+            const values=[0,60,70,80,90,100,65,75,85,95,62,72,82,92,68,78,88,98];let n=0;
+            for(const [i,id] of ids.entries()){
+                if(!e.records[id])e.records[id]=record(id,String(i+1).padStart(2,'0'));const rr=e.records[id];Object.assign(rr,{checkin:true,draw:17,prepStarted:Date.now()-900001,handoff:'accepted',onsiteEnded:true,technicalSubmitted:true,stage:'done',subject:2});rr.files=subjects.map((_,q)=>({...fullFile(e,id,q),serverVerified:true}));
+                if(!['C','D20'].includes(id)){e.scores[key(0,0,id)]={value:values[n],videoVersion:1,revision:1,updatedAt:new Date(Date.now()-(18-n)*60000).toISOString(),updatedAtMs:Date.now()-(18-n)*60000,saveOrder:n};n++;}
+            }
+        }
         if(spec.mode==='reviewReady'){WorkflowRevision.markSubmitted(e);e.metricsSynthetic=true;}
         if(spec.mode==='release'){r.files.forEach(f=>{f.upload='uploading';f.serverVerified=false;f.uploadUntil=WorkflowRevision.now(d)+1200;});}
         if(spec.mode==='uploads'){r.technicalSubmitted=true;r.files.forEach(f=>{f.upload='uploading';f.uploadUntil=WorkflowRevision.now(d)+1200;});}
@@ -613,7 +620,7 @@
         if (storageError && memory) return memory;
         try {
             const d = JSON.parse(localStorage.getItem(KEY));
-            return d?.version === 11 ? WorkflowRevision.decorate(d) : WorkflowRevision.decorate(initial());
+            return d?.version === 12 ? WorkflowRevision.decorate(d) : WorkflowRevision.decorate(initial());
         } catch {
             return memory || (initial());
         }
@@ -769,7 +776,7 @@
             };
             e.roster = [a.studentId];
             e.replay=WorkflowRevision.studentReplay(source,a.studentId);delete e.studentVideoRelease;
-            for(const k of ['scorePolicy','scoreRev','reportStale','metricsSynthetic','assignmentRev','staffRev','opened'])delete e[k];
+            for(const k of ['setupReview','scorePolicy','scoreRev','reportStale','metricsSynthetic','assignmentRev','staffRev','opened'])delete e[k];
             out.exams.forEach(x=>{const replay=WorkflowRevision.studentReplay(d.exams[x.id],a.studentId);x.videoAvailable=replay.available;x.videoOpened=replay.opened;});
             e.publications = []; out.exams.forEach(x=>delete x.publicationVersion);
             delete e.staff;
@@ -809,7 +816,7 @@
     }
 
     function prepIssues(e, d) {
-        return [!e.name.trim() && '考试名称', !e.date && '日期', !e.roster.length && '名单', !e.paperSelected && '完整套卷', !e.paperComplete && '题套缺科', !d.staff[e.staff.invigilator]?.active && '监考岗位', !d.staff[e.staff.recorder]?.active && '录制岗位', e.assignments.some(v => !v.length) && '评分分工'].filter(Boolean);
+        return [!e.name.trim() && '考试名称', !e.date && '日期', !e.roster.length && '名单', !e.paperSelected && '完整套卷', !e.paperComplete && '题套缺科', !d.staff[e.staff.invigilator]?.active && '监考岗位', !d.staff[e.staff.recorder]?.active && '录制岗位', e.assignments.some(v => !v.length) && '评分分工', e.status==='draft'&&(!e.setupReview||e.setupReview.staffRev!==e.staffRev||e.setupReview.assignmentRev!==e.assignmentRev)&&'岗位与评分分工核对'].filter(Boolean);
     }
 
     function publishIssues(e) {
@@ -910,7 +917,7 @@
                     ok: true,
                     message: '新考试草稿已建立。请准备本场名单，再检查并开放岗位任务。',
                     examId: nid,
-                    target: 'W01'
+                    target: 'W11'
                 };
             }
             needs(e && allowedExam(a, e), '当前身份没有这场考试的任务。');
@@ -968,7 +975,8 @@
                     needs(input.complete, '缺科题套不能选入本场。');
                     e.paperSelected = true;
                     e.paperComplete = true;
-                    message = '三份完整题组17/19/21已选入本场，缺科题组不参与抽取。';
+                    message = '三份完整题组17/19/21已选入本场，接下来核对岗位和评分分工。';
+                    target = 'W09';
                     break;
                 case 'save-assignments':
                     group('admin');

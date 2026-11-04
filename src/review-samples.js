@@ -41,6 +41,7 @@
  add('S08','post','studentReplay','本人本场三科正式视频已核验且教务已开放；评分与回看独立。','切换三科，在线播放合成视频；仅本人视频，不显示成绩。');
  add('S08L','post','replayLocked','本人已完成现场考试，教务尚未开放本场回看。','查看等待开放状态，不能播放；开放不依赖评分完成。');
  add('S08P','post','replayProcessing','本场回看已开放，新闻视频仍处理中，另外两科已就绪。','查看本科处理中状态，切换其他已就绪科目回看。',{q:1});
+ add('W09A','queue','prepared','名单、完整套卷和岗位分工已准备，等待教务核对。','核对监考/录制岗位及单老师单科评分分工，确认后进入开场检查。');
  const get=id=>entries[id]||null;
  window.ReviewSamples={get,entries,fixture:id=>get(id)?'page-'+id:''};
 })();
