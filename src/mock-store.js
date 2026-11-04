@@ -5,7 +5,7 @@
         pageSample = requestedFixture.startsWith('page-') ? window.ReviewSamples?.get(requestedFixture.slice(5)) : null;
     const fixture = pageSample || ['published', 'pending', 'signed', 'record'].includes(requestedFixture) ? requestedFixture : '';
     const walk = ['academic', 'student', 'invigilator', 'recorder', 'teacher', 'admin'].includes(params.get('walk')) ? params.get('walk') : '';
-    const KEY = 'yifeng.frontend.github.v012' + (walk ? ':walk:' + walk : fixture ? ':' + fixture : '');
+    const KEY = 'yifeng.frontend.github.v013' + (walk ? ':walk:' + walk : fixture ? ':' + fixture : '');
     const subjects = ['作品朗读', '新闻播报', '话题评述'];
     const students = [{
         id: 'A',
@@ -98,7 +98,7 @@
         person: p,
         q,
         version,
-        device: e.room + '-01',
+        device: (e.records[p]?.plan?.room||e.room) + '-01',
         originRecorder: owner,
         custodian: owner,
         local: true,
@@ -661,7 +661,7 @@
     }
 
     function allowedExam(a, e) {
-        return ['admin', 'academic'].includes(a.group) || a.group === 'teacher' && e.assignments.some(v => v.includes(a.teacher)) || a.group === 'student' && e.roster.includes(a.studentId) || ['invigilator', 'recorder'].includes(a.group) && (e.staff[a.group] === a.staffId || e.transfers.some(t => t.from === a.staffId || t.to === a.staffId));
+        return ['admin', 'academic'].includes(a.group) || a.group === 'teacher' && e.assignments.some(v => v.includes(a.teacher)) || a.group === 'student' && e.status!=='draft' && e.roster.includes(a.studentId) || ['invigilator', 'recorder'].includes(a.group) && (e.staff[a.group] === a.staffId || e.transfers.some(t => t.from === a.staffId || t.to === a.staffId));
     }
 
     function responsible(a, e) {
@@ -678,6 +678,7 @@
         onsiteEnded: r.onsiteEnded,
         attendance: r.attendance,
         prepStarted: r.prepStarted,
+        plan:r.plan,
         forcePrepEnd:r.forcePrepEnd,forcePrepReason:r.forcePrepReason,
         subject: r.subject,
         stage: r.stage,
@@ -716,9 +717,11 @@
         };
         if (!source || !allowedExam(a, source)) return out;
         const e = clone(source);
+        const rosterPeople=RosterV13.people(d,students,source);
         out.exam = e;
+        RosterV13.projection(e,a);
         if (['admin', 'academic'].includes(a.group)) {
-            out.people = clone(students);
+            out.people = clone(rosterPeople);
             if (a.group === 'admin') {
                 e.hasScores=Object.keys(e.scores).length>0; delete e.batches; delete e.watchRecords;
                 delete e.scores;
@@ -770,14 +773,14 @@
         if (a.group === 'student') {
             out.staff = {};
             delete e.lastEnded;
-            out.people = clone(students.filter(p => p.id === a.studentId));
+            out.people = clone(rosterPeople.filter(p => p.id === a.studentId));
             e.records = {
                 [a.studentId]: publicRecord(e.records[a.studentId], source)
             };
             e.roster = [a.studentId];
             e.replay=WorkflowRevision.studentReplay(source,a.studentId);delete e.studentVideoRelease;
             for(const k of ['setupReview','scorePolicy','scoreRev','reportStale','metricsSynthetic','assignmentRev','staffRev','opened'])delete e[k];
-            out.exams.forEach(x=>{const replay=WorkflowRevision.studentReplay(d.exams[x.id],a.studentId);x.videoAvailable=replay.available;x.videoOpened=replay.opened;});
+            out.exams.forEach(x=>{const plan=d.exams[x.id].records[a.studentId]?.plan;if(plan)Object.assign(x,{date:plan.date,room:plan.room,batchLabel:plan.batchLabel,slot:plan.slot});const replay=WorkflowRevision.studentReplay(d.exams[x.id],a.studentId);x.videoAvailable=replay.available;x.videoOpened=replay.opened;});
             e.publications = []; out.exams.forEach(x=>delete x.publicationVersion);
             delete e.staff;
             delete e.queue;
@@ -794,12 +797,12 @@
         e.publications = [];
         e.transfers = e.transfers.filter(t => t.from === a.staffId || t.to === a.staffId);
         if (a.group === 'invigilator') {
-            out.people = responsible(a, source) ? clone(students.filter(p => e.roster.includes(p.id))) : [];
+            out.people = responsible(a, source) ? clone(rosterPeople.filter(p => e.roster.includes(p.id))) : [];
             e.records = responsible(a, source) ? Object.fromEntries(Object.entries(e.records).map(([p, r]) => [p, publicRecord(r, source)])) : {};
             e.exceptions = e.exceptions.filter(v => ['absence', 'reorder', 'redraw', 'return'].includes(v.type));
         } else if (a.group === 'recorder') {
             const ids = source.roster.filter(p => source.current === p && responsible(a, source) || source.records[p].files.some(f => f?.custodian === a.staffId) || source.records[p].history.some(v => v.some(f => f.custodian === a.staffId)));
-            out.people = clone(students.filter(p => ids.includes(p.id)));
+            out.people = clone(rosterPeople.filter(p => ids.includes(p.id)));
             e.records = Object.fromEntries(Object.entries(e.records).filter(([p]) => ids.includes(p)));
             e.roster = ids;
             e.exceptions = e.exceptions.filter(v => ids.includes(v.person));
@@ -816,7 +819,7 @@
     }
 
     function prepIssues(e, d) {
-        return [!e.name.trim() && '考试名称', !e.date && '日期', !e.roster.length && '名单', !e.paperSelected && '完整套卷', !e.paperComplete && '题套缺科', !d.staff[e.staff.invigilator]?.active && '监考岗位', !d.staff[e.staff.recorder]?.active && '录制岗位', e.assignments.some(v => !v.length) && '评分分工', e.status==='draft'&&(!e.setupReview||e.setupReview.staffRev!==e.staffRev||e.setupReview.assignmentRev!==e.assignmentRev)&&'岗位与评分分工核对'].filter(Boolean);
+        return [!e.name.trim() && '考试名称', !e.date && '日期', !e.roster.length && '名单', e.scheduleRequired&&(!e.arrangementConfirmed||!e.schedule||e.schedule.rosterRev!==(e.rosterRev||1)||RosterV13.scheduleIssues(e.schedule,e.roster).length)&&'考前安排未确认或存在冲突', !e.paperSelected && '完整套卷', !e.paperComplete && '题套缺科', !d.staff[e.staff.invigilator]?.active && '监考岗位', !d.staff[e.staff.recorder]?.active && '录制岗位', e.assignments.some(v => !v.length) && '评分分工', e.status==='draft'&&(!e.setupReview||e.setupReview.staffRev!==e.staffRev||e.setupReview.assignmentRev!==e.assignmentRev)&&'岗位与评分分工核对'].filter(Boolean);
     }
 
     function publishIssues(e) {
@@ -910,7 +913,7 @@
                     n.paperSelected = old.paperSelected;
                     n.paperComplete = old.paperComplete;
                 }
-                Object.assign(n,{site:input.site||'示例校区A · 教学楼2层',batchLabel:input.batchLabel||'上午批',slot:input.slot||n.slot});
+                Object.assign(n,{rosterRev:1,scheduleRev:0,scheduleRequired:true,arrangementConfirmed:false,site:input.site||'示例校区A · 教学楼2层',batchLabel:input.batchLabel||'上午批',slot:input.slot||n.slot});
                 d.exams[nid] = n;
                 write(d);
                 return {
@@ -942,6 +945,9 @@
                 qValid();
                 needs(e.assignments[q].includes(a.teacher), '本科目未分配给本人。');
             };
+            if(command==='invalidate-exam-schedule'){group('academic','admin');needs(e.status==='draft','已开放的安排不能修改。');needs(input.expectedRosterRev===(e.rosterRev||1)&&input.expectedScheduleRev===(e.scheduleRev||0),'安排已有新版本，请刷新后重新核对。');e.arrangementConfirmed=false;e.setupReview=null;write(d);return {ok:true,message:'安排草稿已修改，请重新确认。'};}
+            const rosterCommand=command==='import-excel-roster'?RosterV13.importRows:command==='save-exam-schedule'?RosterV13.saveSchedule:null;
+            if(rosterCommand){const result=rosterCommand({d,e,a,input,needs,group,record,base:students});log(result.message);write(d);return {ok:true,...result,examId:e.id};}
             const revised=WorkflowRevision.run(command,{d,e,a,actorId,input,p,r,q,needs,group,person,currentPerson,teacher,fullFile,findFile,fileBlocked,onsiteBlocked,publishIssues,snapshot});
             if(revised){log(revised.message);write(d);return {ok:true,...revised,examId:e.id};}
             switch (command) {
@@ -970,6 +976,7 @@
                     target = 'W12';
                     break;
                 case 'save-paper':
+                    needs(!e.scheduleRequired||e.arrangementConfirmed,'请先确认全部考生的班次、考场、时间和排次。');
                     group('admin', 'academic');
                     needs(e.status === 'draft', '现场已开放，现用题套保持原版本。重抽需单独申请。');
                     needs(input.complete, '缺科题套不能选入本场。');
@@ -1540,7 +1547,7 @@
         },
         advanceWalk,
         subjects,
-        students,
+        get students(){return RosterV13.people(read(),students);},
         view,
         run,
         reset,

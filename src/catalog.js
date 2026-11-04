@@ -26,8 +26,8 @@ window.Catalog=[
   {
     "id": "W11",
     "as": "academic",
-    "title": "本场名单导入",
-    "sub": "核对机构编号 · 导入应考名单",
+    "title": "Excel名单导入与校验",
+    "sub": "模板、字段对应、逐行修正与预览确认",
     "device": "desktop",
     "phase": 0,
     "f": "F01–F09",
@@ -37,8 +37,8 @@ window.Catalog=[
   {
     "id": "W12",
     "as": "academic",
-    "title": "考前安排",
-    "sub": "班次、考点、时间、考场与排次",
+    "title": "班次考场与排次安排",
+    "sub": "多人分配、多考场容量与时间/排次冲突检查",
     "device": "desktop",
     "phase": 0,
     "f": "F01–F09",
@@ -355,7 +355,7 @@ window.Catalog=[
   {
     "id": "M01",
     "as": "invigilator",
-    "title": "本考场签到与候考",
+    "title": "本场签到与候考",
     "sub": "签到记录 · 名单筛选",
     "device": "mobile",
     "phase": 2,
