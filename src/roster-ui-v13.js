@@ -83,5 +83,5 @@
  case 'confirm-schedule':{const result=H.execute('save-exam-schedule',{schedule:s.schedule,expectedRosterRev:s.rosterRev,expectedScheduleRev:s.scheduleRev,verified:!!v.verified});if(result.ok){cache.delete(key('schedule'));try{localStorage.removeItem(key('schedule'));}catch{}}break;}
  }}catch(e){tell(H.screen==='W11'?'import':'schedule',e.message);}});
  }
- window.RosterUIV13={importPage,schedulePage,clearScope:scope=>{const prefix=scope+':';for(const k of cache.keys())if(k.startsWith(prefix)&&/^[^:]+:(?:import|schedule)13$/.test(k.slice(prefix.length)))cache.delete(k);}};
+ window.RosterUIV13={importPage,schedulePage,writeWorkbook:async(sheets,name)=>{const x=await excel(),w=x.utils.book_new();for(const s of sheets)x.utils.book_append_sheet(w,x.utils.aoa_to_sheet(s.rows),s.name);const data=x.write(w,{bookType:'xlsx',type:'array'}),a=document.createElement('a'),u=URL.createObjectURL(new Blob([data],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);},clearScope:scope=>{const prefix=scope+':';for(const k of cache.keys())if(k.startsWith(prefix)&&/^[^:]+:(?:import|schedule)13$/.test(k.slice(prefix.length)))cache.delete(k);}};
 })();

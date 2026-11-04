@@ -12,8 +12,8 @@
  teacher6:{id:'teacher6',label:'评卷老师6',name:'评卷老师6',group:'teacher',teacher:5,home:'W05'},
  invigilator:{id:'invigilator',label:'监考员甲',name:'工作人员甲',group:'invigilator',staffId:'staff1',home:'M00'},
  invigilator2:{id:'invigilator2',label:'监考员乙',name:'工作人员乙',group:'invigilator',staffId:'staff2',home:'M00'},
- recorder:{id:'recorder',label:'录制员甲',name:'工作人员甲',group:'recorder',staffId:'staff1',home:'A00'},
- recorder2:{id:'recorder2',label:'录制员乙',name:'工作人员乙',group:'recorder',staffId:'staff2',home:'A00'},
+ recorder:{id:'recorder',label:'录制员乙',name:'工作人员乙',group:'recorder',staffId:'staff2',home:'A00'},
+ recorder2:{id:'recorder2',label:'录制员甲',name:'工作人员甲',group:'recorder',staffId:'staff1',home:'A00'},
  studentA:{id:'studentA',label:'学生A',name:'示例学员A',group:'student',studentId:'A',home:'S00'},
  studentB:{id:'studentB',label:'学生B',name:'示例学员B',group:'student',studentId:'B',home:'S00'},
  studentC:{id:'studentC',label:'学生C',name:'示例学员C',group:'student',studentId:'C',home:'S00'}

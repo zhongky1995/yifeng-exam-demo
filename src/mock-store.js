@@ -5,7 +5,7 @@
         pageSample = requestedFixture.startsWith('page-') ? window.ReviewSamples?.get(requestedFixture.slice(5)) : null;
     const fixture = pageSample || ['published', 'pending', 'signed', 'record'].includes(requestedFixture) ? requestedFixture : '';
     const walk = ['academic', 'student', 'invigilator', 'recorder', 'teacher', 'admin'].includes(params.get('walk')) ? params.get('walk') : '';
-    const KEY = 'yifeng.frontend.github.v013' + (walk ? ':walk:' + walk : fixture ? ':' + fixture : '');
+    const KEY = 'yifeng.frontend.github.v014' + (walk ? ':walk:' + walk : fixture ? ':' + fixture : '');
     const subjects = ['作品朗读', '新闻播报', '话题评述'];
     const students = [{
         id: 'A',
@@ -65,7 +65,7 @@
         paperComplete: true,
         staff: {
             invigilator: 'staff1',
-            recorder: 'staff1'
+            recorder: 'staff2'
         },
         staffRev: 1,
         scorePolicy: {
@@ -92,7 +92,7 @@
         log: [],
         prepSaved: false
     });
-    const fullFile = (e, p, q, version = 1, owner = 'staff1') => ({
+    const fullFile = (e, p, q, version = 1, owner = 'staff2') => ({
         id: `${e.id}-${p}-${q}-v${version}`,
         examId: e.id,
         person: p,
@@ -424,12 +424,12 @@
             }
         }
         if (spec.mode === 'recorderTransfer' || spec.mode === 'monitorTransfer') {
-            const role = spec.mode === 'recorderTransfer' ? 'recorder' : 'invigilator';
+            const role = spec.mode === 'recorderTransfer' ? 'recorder' : 'invigilator';if(role==='recorder')e.staff.invigilator='staff4';else e.staff.recorder='staff3';
             e.transfers.push({
                 id: 'TR-DEMO',
                 role,
-                from: 'staff1',
-                to: 'staff2',
+                from: role==='recorder'?'staff2':'staff1',
+                to: role==='recorder'?'staff1':'staff2',
                 reason: '候选演示：临时需要接手',
                 status: 'pending',
                 staffRev: e.staffRev,
@@ -443,13 +443,20 @@
             e.studentVideoRelease={enabled:spec.mode!=='replayLocked',at:stamp(),by:'academic'};e.scores={};e.drafts={};e.opened=[false,false,false];
             if(spec.mode==='replayProcessing')Object.assign(r.files[1],{upload:'uploading',serverVerified:false,checked:false});
         }
-        if(spec.mode==='reviewBatch'){
+        if(['reviewBatch','reviewAnalytics'].includes(spec.mode)){
             const ids=['A','B','C',...Array.from({length:17},(_,i)=>'D'+String(i+4).padStart(2,'0'))];e.roster=ids;e.queue=[...ids];e.scores={};e.drafts={};e.opened=[true,true,true];
             const values=[0,60,70,80,90,100,65,75,85,95,62,72,82,92,68,78,88,98];let n=0;
             for(const [i,id] of ids.entries()){
                 if(!e.records[id])e.records[id]=record(id,String(i+1).padStart(2,'0'));const rr=e.records[id];Object.assign(rr,{checkin:true,draw:17,prepStarted:Date.now()-900001,handoff:'accepted',onsiteEnded:true,technicalSubmitted:true,stage:'done',subject:2});rr.files=subjects.map((_,q)=>({...fullFile(e,id,q),serverVerified:true}));
                 if(!['C','D20'].includes(id)){e.scores[key(0,0,id)]={value:values[n],videoVersion:1,revision:1,updatedAt:new Date(Date.now()-(18-n)*60000).toISOString(),updatedAtMs:Date.now()-(18-n)*60000,saveOrder:n};n++;}
             }
+        }
+        if(spec.mode==='reviewAnalytics'){
+            e.metricsSynthetic=true;e.scores={};e.rosterProfiles??={};
+            const limits=[18,14,20,16,10,0];for(const [i,id] of e.roster.entries()){
+                if(!students.some(p=>p.id===id))e.rosterProfiles[id]={id,name:'示例考生'+String(i+1).padStart(2,'0'),code:'DEMO-'+String(i+1).padStart(3,'0'),class:'示例班',campus:'示例校区'};
+                for(let t=0;t<6;t++)if(i<limits[t]){const q=Math.floor(t/2);e.scores[key(q,t,id)]={value:t===0?[0,60,70,80,90,100,65,75,85,95,62,72,82,92,68,78,88,98][i]:[58,63,68,73,78,83,88,93,98,100][(i+t)%10],videoVersion:1,revision:1,updatedAt:stamp(),updatedAtMs:Date.now()-i*60000,saveOrder:i,reviewMs:t===4&&i>7?null:(35+t*8+(i%5)*7)*1000,timeSource:t===4&&i>7?null:'synthetic'};}
+            }WorkflowRevision.decorate(d);WorkflowRevision.markSubmitted(e);
         }
         if(spec.mode==='reviewReady'){WorkflowRevision.markSubmitted(e);e.metricsSynthetic=true;}
         if(spec.mode==='release'){r.files.forEach(f=>{f.upload='uploading';f.serverVerified=false;f.uploadUntil=WorkflowRevision.now(d)+1200;});}
@@ -523,7 +530,7 @@
             if (graded)
                 for (let q = 0; q < 3; q++)
                     for (const t of e.assignments[q]) e.scores[key(q, t, p)] = {
-                        value: 86 + q + t,
+                        value: 86 + q + t,reviewMs:(40+q*8+t*5)*1000,timeSource:'synthetic',
                         videoVersion: 1,
                         revision: 1,
                         updatedAt: stamp()
@@ -656,7 +663,7 @@
         write(d);
     }
 
-    function clearPreparationDrafts(){const prefix=KEY+':';try{for(const k of Object.keys(localStorage))if(k.startsWith(prefix)&&/^[^:]+:(?:import|schedule)13$/.test(k.slice(prefix.length)))localStorage.removeItem(k);}catch{}window.RosterUIV13?.clearScope?.(KEY);}
+    function clearPreparationDrafts(){const prefix=KEY+':';try{for(const k of Object.keys(localStorage))if(k.startsWith(prefix)&&k.slice(prefix.length).startsWith('reviewTime:'))localStorage.removeItem(k);else if(k.startsWith(prefix)&&/^[^:]+:(?:(?:import|schedule)13|roomStaff14)$/.test(k.slice(prefix.length)))localStorage.removeItem(k);}catch{}window.RosterUIV13?.clearScope?.(KEY);window.RoomStaffV14?.clearScope?.(KEY);window.ReviewTimingV14?.clearScope?.(KEY);}
 
     function reset(preset = 'start') {
         clearPreparationDrafts();
@@ -822,7 +829,7 @@
     }
 
     function prepIssues(e, d) {
-        return [!e.name.trim() && '考试名称', !e.date && '日期', !e.roster.length && '名单', e.scheduleRequired&&(!e.arrangementConfirmed||!e.schedule||e.schedule.rosterRev!==(e.rosterRev||1)||RosterV13.scheduleIssues(e.schedule,e.roster).length)&&'考前安排未确认或存在冲突', !e.paperSelected && '完整套卷', !e.paperComplete && '题套缺科', !d.staff[e.staff.invigilator]?.active && '监考岗位', !d.staff[e.staff.recorder]?.active && '录制岗位', e.assignments.some(v => !v.length) && '评分分工', e.status==='draft'&&(!e.setupReview||e.setupReview.staffRev!==e.staffRev||e.setupReview.assignmentRev!==e.assignmentRev)&&'岗位与评分分工核对'].filter(Boolean);
+        return [!e.name.trim() && '考试名称', !e.date && '日期', !e.roster.length && '名单', ...RoomStaffV14.issues(e,d.staff), e.scheduleRequired&&(!e.arrangementConfirmed||!e.schedule||e.schedule.rosterRev!==(e.rosterRev||1)||RosterV13.scheduleIssues(e.schedule,e.roster).length)&&'考前安排未确认或存在冲突', !e.paperSelected && '完整套卷', !e.paperComplete && '题套缺科', !d.staff[e.staff.invigilator]?.active && '监考岗位', !d.staff[e.staff.recorder]?.active && '录制岗位', e.assignments.some(v => !v.length) && '评分分工', e.status==='draft'&&(!e.setupReview||e.setupReview.staffRev!==e.staffRev||e.setupReview.assignmentRev!==e.assignmentRev)&&'岗位与评分分工核对'].filter(Boolean);
     }
 
     function publishIssues(e) {
@@ -949,6 +956,7 @@
                 needs(e.assignments[q].includes(a.teacher), '本科目未分配给本人。');
             };
             if(command==='invalidate-exam-schedule'){group('academic','admin');needs(e.status==='draft','已开放的安排不能修改。');needs(input.expectedRosterRev===(e.rosterRev||1)&&input.expectedScheduleRev===(e.scheduleRev||0),'安排已有新版本，请刷新后重新核对。');e.arrangementConfirmed=false;e.setupReview=null;write(d);return {ok:true,message:'安排草稿已修改，请重新确认。'};}
+            if(command==='save-room-staff'){const result=RoomStaffV14.save({e,d,input,needs,group});log(result.message);write(d);return {ok:true,...result,examId:e.id};}
             const rosterCommand=command==='import-excel-roster'?RosterV13.importRows:command==='save-exam-schedule'?RosterV13.saveSchedule:null;
             if(rosterCommand){const result=rosterCommand({d,e,a,input,needs,group,record,base:students});log(result.message);write(d);return {ok:true,...result,examId:e.id};}
             const revised=WorkflowRevision.run(command,{d,e,a,actorId,input,p,r,q,needs,group,person,currentPerson,teacher,fullFile,findFile,fileBlocked,onsiteBlocked,publishIssues,snapshot});
@@ -999,12 +1007,13 @@
                 case 'assign-staff':
                     group('admin');
                     needs(e.status === 'draft', '已开放场次请使用人员移交。');
+                    needs(input.monitor!==input.recorder,'监考与录制须由不同工作人员承担。');
                     needs(d.staff[input.monitor]?.active && d.staff[input.recorder]?.active, '请选择可用工作人员。');
                     e.staff = {
                         invigilator: input.monitor,
                         recorder: input.recorder
                     };
-                    e.staffRev++;
+                    RoomStaffV14.syncFirst(e);e.staffRev++;e.setupReview=null;
                     message = '本场岗位已安排。';
                     break;
                 case 'activate-exam':
@@ -1331,7 +1340,7 @@
                         const role = input.role;
                         needs(['recorder', 'invigilator'].includes(role), '请选择现场岗位。');
                         needs(a.group === 'admin' || role === a.group && e.staff[role] === a.staffId, '只能移交本人现有岗位。');
-                        needs(d.staff[input.to]?.active && input.to !== e.staff[role], '请选择另一位可用接手人。');
+                        needs(input.to!==e.staff[role==='recorder'?'invigilator':'recorder'],'接手人已承担本考场另一岗位，请选择其他人。');needs(d.staff[input.to]?.active && input.to !== e.staff[role], '请选择另一位可用接手人。');
                         needs(input.reason?.trim(), '请填写移交原因。');
                         needs(!pendingTransfer(e, role), '该岗位已有待接收移交，请查询原单。');
                         needs(!busy(e), '正在录制或封装，请先保存或登记异常再移交。');
@@ -1368,7 +1377,7 @@
                     needs(t.staffRev === e.staffRev && e.staff[t.role] === t.from, '岗位已变化，请退回后重新发起。');
                     needs(!busy(e), '当前仍在录制或封装，暂不能接收。');
                     needs(!staffConflict(d, e, t.to, t.role), '同时间段有其他考试岗位，请先调整冲突。');
-                    e.staff[t.role] = t.to;
+                    needs(t.to!==e.staff[t.role==='recorder'?'invigilator':'recorder'],'接手人已承担本考场另一岗位，两岗须由不同人员承担。');e.staff[t.role] = t.to;RoomStaffV14.syncFirst(e);needs(!RoomStaffV14.issues(e,d.staff).length,RoomStaffV14.issues(e,d.staff).join('；'));
                     e.staffRev++;
                     if (t.role === 'recorder') {
                         for (const r of Object.values(e.records))

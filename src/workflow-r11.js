@@ -6,7 +6,9 @@
   const batchKey = (q, teacher) => `${q}-${teacher}`;
   const scoreKey = (q, teacher, person) => `${q}-${teacher}-${person}`;
   const stamp = () => new Date().toLocaleString('sv-SE', {timeZone:'Asia/Shanghai'});
+  function beginPreparation(r,d){r.stage='intro';r.preparationSeq=(r.preparationSeq||0)+1;r.introState=r.introAudioOwner?'awaiting_audio':'demo';r.introStarted=r.introAudioOwner?0:now(d);r.phaseDeadline=r.introAudioOwner?0:now(d)+ExamSpec.prepareCues[r.subject].totalMs;}
   function decorate(d) {
+    RoomStaffV14.decorate(d);
     for (const e of Object.values(d.exams)) {
       e.site ??= '示例校区A · 教学楼2层';
       e.batchLabel ??= '上午批';
@@ -23,7 +25,7 @@
       for (const r of Object.values(e.records)) {
         r.forcePrepEnd ??= 0;
         r.forcePrepReason ??= '';
-        r.autoSequence ??= false;
+        if(r.stage==='buffer')beginPreparation(r,d);r.autoSequence ??= false;
         r.pauseNext ??= false;
         for (const f of r.files.filter(Boolean)) {if(f.upload!=='received')f.serverVerified=false;else f.serverVerified ??= true;}
       }
@@ -74,7 +76,7 @@
     switch(command) {
       case 'confirm-exam-setup':
         group('academic','admin');needs(e.status==='draft','本场已开放，此处查看已确认的准备结果。');needs(e.roster.length&&e.paperSelected&&e.paperComplete,'请先导入名单并选择完整套卷，再核对岗位和评分分工。');
-        needs(d.staff[e.staff.invigilator]?.active&&d.staff[e.staff.recorder]?.active,'现场岗位尚未安排有效人员。');needs(e.assignments.every(v=>v.length)&&new Set(e.assignments.flat()).size===e.assignments.flat().length,'请按单老师单科核对全部评分分工。');needs(input.verified,'请确认岗位及评分分工已核对。');
+        needs(!RoomStaffV14.issues(e,d.staff).length,RoomStaffV14.issues(e,d.staff).join('；'));needs(d.staff[e.staff.invigilator]?.active&&d.staff[e.staff.recorder]?.active,'现场岗位尚未安排有效人员。');needs(e.assignments.every(v=>v.length)&&new Set(e.assignments.flat()).size===e.assignments.flat().length,'请按单老师单科核对全部评分分工。');needs(input.verified,'请确认岗位及评分分工已核对。');
         e.setupReview={staffRev:e.staffRev,assignmentRev:e.assignmentRev,at:stamp(),by:c.actorId};return result('岗位和评分分工已核对，继续检查并开放本场。','W01');
       case 'open-student-videos':
         group('academic');needs(e.status!=='draft','本场尚未开放考试。');needs(e.roster.length&&e.roster.every(id=>e.records[id].onsiteEnded||e.records[id].attendance==='absent'),'按R09建议，本班次现场考试结束后再统一开放本人视频。');
@@ -90,12 +92,12 @@
         return result('已按方案R01结束该生备考，原自然截止与原因保留；仍需监考叫号交接。');
       case 'start-record':
         group('recorder');currentPerson();needs(e.deviceChecked,'请先完成设备检查。');needs(r.stage==='ready'&&!r.files[q]&&r.subject===q,'当前科目尚不具备启动条件。');
-        r.autoSequence=true;r.pauseNext=false;r.stage='intro';r.introAudioOwner=input.audioOwner||'';r.introState=input.audioOwner?'awaiting_audio':'demo';r.introStarted=input.audioOwner?0:now(d);r.phaseDeadline=input.audioOwner?0:now(d)+ExamSpec.introCue.totalMs;
+        r.autoSequence=true;r.pauseNext=false;r.introAudioOwner=input.audioOwner||'';beginPreparation(r,d);
         return result('本次三科考试已启动：准备语音 → 3、2、1 → 开始；播报结束后才开始本科计时。');
       case 'restart-intro-audio':
-        group('recorder');currentPerson();needs(r.stage==='intro'&&input.audioOwner,'当前没有待重播的首科提示。');r.introAudioOwner=input.audioOwner;r.introState='awaiting_audio';r.introStarted=0;r.phaseDeadline=0;return result('重新播放开考提示，正式录制尚未开始。');
+        group('recorder');currentPerson();needs(r.stage==='intro'&&input.audioOwner,'当前没有待重播的本科准备提示。');r.introAudioOwner=input.audioOwner;beginPreparation(r,d);return result('重新播放开考提示，正式录制尚未开始。');
       case 'intro-audio-started':
-        group('recorder');currentPerson();needs(r.stage==='intro'&&r.introAudioOwner===input.audioOwner,'当前提示已变化。');r.introState='playing';r.introStarted=now(d);r.phaseDeadline=now(d)+ExamSpec.introCue.totalMs;return result('正在播报开考提示。');
+        group('recorder');currentPerson();needs(r.stage==='intro'&&r.introAudioOwner===input.audioOwner,'当前提示已变化。');r.introState='playing';r.introStarted=now(d);r.phaseDeadline=now(d)+ExamSpec.prepareCues[r.subject].totalMs;return result('正在播报开考提示。');
       case 'intro-audio-finished':
         group('recorder');currentPerson();needs(r.stage==='intro'&&r.introAudioOwner===input.audioOwner&&r.introState==='playing','当前提示尚未完整播放。');r.stage='recording';r.started=now(d);r.captureDeadline=now(d)+ExamSpec.durations[r.subject]*1000;r.introState='finished';return result('开考提示已播放完毕，本科正式录制开始。');
       case 'intro-audio-failed':
@@ -112,14 +114,15 @@
         needs(!d.faults.saveFail,'保存仍失败，原任务与已录片段保留；先恢复模拟故障再查询。');r.stage='saving';r.saveAt=now(d);
         return result('正在核对同一科原保存结果，不重录、不改变学员归属。');
       case 'pause-sequence':
-        group('recorder');currentPerson();needs(['recording','buffer','awaiting_next'].includes(r.stage),'当前不在可暂停/接续阶段。');
-        if(r.stage==='awaiting_next'){r.pauseNext=false;r.stage='buffer';r.phaseDeadline=now(d)+6000;return result('已恢复接续，重新走完整6秒缓冲，尚未开始本科计时。');}
-        r.pauseNext=!r.pauseNext;if(r.stage==='buffer'&&r.pauseNext)r.stage='awaiting_next';
+        group('recorder');currentPerson();needs(['recording','intro','buffer','awaiting_next'].includes(r.stage),'当前不在可暂停/接续阶段。');
+        if(r.stage==='awaiting_next'){r.pauseNext=false;beginPreparation(r,d);return result('已恢复接续，重新播放本科完整准备提示，尚未开始正式计时。');}
+        r.pauseNext=!r.pauseNext;if(['intro','buffer'].includes(r.stage)&&r.pauseNext)r.stage='awaiting_next';
+        if(r.stage==='awaiting_next')return result('本科准备已暂停，继续时重新播放完整提示。');
         return result(r.pauseNext?'当前本科继续；保存完成后等待人工接续。':'后续恢复自动接续，当前本科计时不变。');
       case 'next-subject':
         group('recorder');currentPerson();needs(r.stage==='awaiting_next','自动接续已启用；只有暂停等待状态才需人工进入下一科。');
-        needs(r.subject>0&&r.files[r.subject-1]?.local,'先确认上一科已保存。');r.pauseNext=false;r.stage='buffer';r.phaseDeadline=now(d)+6000;
-        return result('已进入下一科的6秒缓冲，不能跳过保存与缓冲。');
+        needs(r.subject>0&&r.files[r.subject-1]?.local,'先确认上一科已保存。');r.pauseNext=false;beginPreparation(r,d);
+        return result('已进入下一科准备，完整文字与语音提示结束后才开始答题。');
       case 'verify-local':
         group('recorder');person();needs(r.files[q]?.local&&!r.files[q].abnormal,'没有可核对的完整本地原片。');needs(input.verified,'请核对本科画面、声音、时长与归属。');
         r.files[q].localReviewed=true;if(r.files[q].upload==='none')r.files[q].upload='queued';
@@ -150,7 +153,7 @@
         teacher();const b=batch(e,a.teacher,q),f=r.files[q],key=scoreKey(q,a.teacher,p);needs(b.status!=='submitted','当前批已提交，普通入口只读；请由教务按建议退回。');
         needs(e.opened[q]&&f?.checked&&!f.abnormal&&!fileBlocked(e,p,q),'当前材料未开放、失效或有问题，不能用填分代替处理。');needs(validScore(input.value),'请填写0–100分，最多两位小数为演示口径；空白不能当成0。');needs(!d.faults.saveFail,'评分保存失败，原输入保留，可在原任务重试。');
         const old=e.scores[key],value=Number(input.value);if(old)e.scoreAudit.push({key,...structuredClone(old),newValue:value,reason:'当前批本人回改',at:stamp(),by:actorIdOrName(c)});
-        e.scores[key]={value,videoVersion:f.version,revision:(old?.revision||0)+1,updatedAt:stamp(),updatedAtMs:Date.now(),saveOrder:++d.seq};delete e.drafts[key];e.scoreRev++;
+        e.scores[key]={value,videoVersion:f.version,revision:(old?.revision||0)+1,updatedAt:stamp(),updatedAtMs:Date.now(),saveOrder:++d.seq,reviewMs:Number.isFinite(input.reviewMs)&&input.reviewMs>=0?Math.max(input.reviewMs,old?.timeSource==='browser'?old.reviewMs||0:0):old?.reviewMs??null,timeSource:Number.isFinite(input.reviewMs)?'browser':old?.timeSource||null};delete e.drafts[key];e.scoreRev++;
         return result(old?`本人当前批评分已从${old.value}改为${value}分，原值与修订保留。`:`本人${value}分已保存；0分有效，当前批内仍可回改。`);
       }
       case 'submit-review-batch': {
@@ -191,7 +194,7 @@
           const q=r.subject;
           if(!r.files[q])r.files[q]={...helpers.fullFile(e,r.id,q,r.history[q].length+1,e.staff.recorder),upload:'none',localReviewed:false,checked:false,serverVerified:false,duration:r.stopDuration||ExamSpec.durations[q],early:(r.stopDuration||ExamSpec.durations[q])<ExamSpec.durations[q],endReason:r.stopReason||'本科到时',recorded:true};
           if(q===2){r.stage='saved';}
-          else if(r.autoSequence){r.subject++;r.stage=r.pauseNext?'awaiting_next':'buffer';r.phaseDeadline=at+6000;}
+          else if(r.autoSequence){r.subject++;if(r.pauseNext)r.stage='awaiting_next';else beginPreparation(r,d);}
           else r.stage='saved';
           changed=true;
         }
@@ -205,7 +208,7 @@
   function advance(d,e) {
     const r=e.current&&e.records[e.current];if(!r)return {ok:false,message:'当前没有场内任务。'};
     if(!['intro','buffer','recording','saving'].includes(r.stage))return {ok:false,message:'当前等待人工或故障恢复，不推进业务条件。'};
-    if(r.stage==='intro'&&r.introAudioOwner){r.introAudioOwner='';r.introState='demo';r.introStarted=now(d);r.phaseDeadline=now(d)+ExamSpec.introCue.totalMs;}
+    if(r.stage==='intro'&&r.introAudioOwner){r.introAudioOwner='';r.introState='demo';r.introStarted=now(d);r.phaseDeadline=now(d)+ExamSpec.prepareCues[r.subject].totalMs;}
     const at=now(d),end=r.stage==='recording'?(r.captureDeadline||r.started+ExamSpec.durations[r.subject]*1000):r.stage==='saving'?r.saveAt:r.phaseDeadline;
     d.captureTimeOffset=(d.captureTimeOffset||0)+Math.max(0,end-at)+1;return {ok:true,message:'仅推演时钟已推进到本阶段结束，原任务和题组不变。'};
   }

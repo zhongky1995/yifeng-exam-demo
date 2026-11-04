@@ -19,4 +19,5 @@ window.ExamSpec={
  paper(id){const p=this.papers[id],r=this.readingTexts[id];if(!p||!r)return Array(3).fill('本次题组或版本未读取到，请联系工作人员核对原记录。');return ['古诗文朗读：'+r.classical+'\n\n现代文朗读：'+r.modern,...p.slice(1)];}
 };
 
-ExamSpec.introCue={"asset": "assets/reading-intro.mp3", "announceMs": 3092, "countdownMs": 3000, "startMs": 690, "totalMs": 6782};
+ExamSpec.prepareCues=[{"subject": "作品朗读", "asset": "assets/prepare-reading-v14.mp3", "announceMs": 3100, "countdownMs": 3000, "startMs": 700, "totalMs": 6800}, {"subject": "新闻播报", "asset": "assets/prepare-news-v14.mp3", "announceMs": 3100, "countdownMs": 3000, "startMs": 700, "totalMs": 6800}, {"subject": "话题评述", "asset": "assets/prepare-comment-v14.mp3", "announceMs": 3100, "countdownMs": 3000, "startMs": 700, "totalMs": 6800}];
+ExamSpec.introCue=ExamSpec.prepareCues[0];
