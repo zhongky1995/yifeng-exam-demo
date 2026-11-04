@@ -784,4 +784,4 @@ const rules=[
     "建议本班次现场结束后由教务统一开放，逐科已收到并核验通过才能播放；与评分提交和成绩核查分开，下载/分享和保存期限待确认。"
   ]
 ];
-const forPage=(screen,actor)=>screen==='U03'&&RolePolicy.get(actor).group==='admin'?['F09']:features.filter(f=>f.pages.includes(screen)).map(f=>f.id);window.PRD={version:'0.12.0',features,roles,gates,rules,forPage,pagesFor:id=>Catalog.filter(n=>forPage(n.screen||n.id,n.as).includes(id))};Catalog.forEach(n=>{n.features=forPage(n.screen||n.id,n.as);n.f=n.features.join(' / ');});})();
+const forPage=(screen,actor)=>screen==='U03'&&RolePolicy.get(actor).group==='admin'?['F09']:features.filter(f=>f.pages.includes(screen)).map(f=>f.id);window.PRD={version:'0.12.1',features,roles,gates,rules,forPage,pagesFor:id=>Catalog.filter(n=>forPage(n.screen||n.id,n.as).includes(id))};Catalog.forEach(n=>{n.features=forPage(n.screen||n.id,n.as);n.f=n.features.join(' / ');});})();
