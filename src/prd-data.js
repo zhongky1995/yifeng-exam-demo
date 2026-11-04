@@ -63,12 +63,12 @@ const features=[
     "stage": "考前",
     "scene": "教务导入并校验本场名单，按班次分配考场、时间和排次；学生查看本人安排。",
     "input": "Excel名单：机构编号、姓名、班级必填，校区选填；各班次日期、考点、报到/考试时间与考场人数上限。",
-    "actions": "下载模板/选文件 → 工作表与字段对应 → 校验修正 → 预览确认导入 → 班次考场配置 → 分配与核对 → 确认安排 → 学生本人查看",
+    "actions": "下载模板/选文件 → 工作表与字段对应 → 校验修正 → 预览确认导入 → 班次考场配置 → 筛选全选 → 设置去向 → 预览确认分配 → 确认全部安排 → 学生本人查看",
     "rules": [
       "机构编号去首尾空格、全半角和英文字母大小写归一比较；文件内重复或编号姓名冲突拦截，本场已有跳过，同名不同编号须核对。",
       "导入仅新增，不覆盖已存在考生、执行记录或分配；新增后需重新确认安排。",
       "每位考生分配唯一班次和考场，排次在班次×考场内唯一；缺分配、超人数、重复排次及同考点同名考场时间重叠时不能确认。",
-      "自动按名单顺序分配并接续现有排次，容量不足或手动起始排次冲突时整次不改；草稿可恢复，确认后进入套卷。",
+      "筛选结果可跨页全选，改变筛选会清空选择。自动按名单顺序接续已有排次，全部考场按顺序填满；也可指定起始排次。先预览每人去向再确认草稿，容量不足或排次冲突整次不改。",
       "已开放只读；学生只能看本人安排，看安排不等于已签到。"
     ],
     "result": "全部考生都有明确班次、考场、报到及考试时段、排次；可导出安排Excel。",
@@ -232,8 +232,8 @@ const features=[
     "id": "F05",
     "title": "三科自动录制与横屏展示",
     "stage": "正式考试",
-    "scene": "录制老师先完成设备检查，核验考号、机位并接收当前考生。",
-    "input": "录制老师先完成设备检查，核验考号、机位并接收当前考生。",
+    "scene": "录制老师先核验当前考生考号与机位，再复核设备，完成后确认核验并接收。",
+    "input": "录制老师先核验当前考生考号与机位，再复核设备，完成后确认核验并接收。",
     "actions": "核验接收 → 一次启动 → 每科准备文字与语音/321/开始 → 正式录制 → 保存 → 下一科准备 → 三段原片核对",
     "rules": [
       "三科120/60/120秒，一次启动自动接续；老师可提前结束单科，留原因和已录片段。",
@@ -254,7 +254,7 @@ const features=[
       "R08"
     ],
     "candidate": false,
-    "entry": "录制老师先完成设备检查，核验考号、机位并接收当前考生。",
+    "entry": "录制老师先核验当前考生考号与机位，再复核设备，完成后确认核验并接收。",
     "scope": "本场×本人班次考场×当前考生×当前科目；三科使用同一生命周期，仅题目与120/60/120秒时限不同。",
     "system": "生成三段独立视频，录制员分别检查后提交技术检查。",
     "handoff": "生成三段独立视频，录制员分别检查后提交技术检查。",
@@ -279,8 +279,8 @@ const features=[
     "coverage": "本地虚构交互，可保存当前样例状态；真实服务、录制和采集能力按工程接入另行验证。",
     "pages": [
       "A00",
-      "A01",
       "A04",
+      "A01",
       "A02",
       "A07",
       "A06"
@@ -801,4 +801,4 @@ const rules=[
     "建议本班次现场结束后由教务统一开放，逐科已收到并核验通过才能播放；与评分提交和成绩核查分开，下载/分享和保存期限待确认。"
   ]
 ];
-const forPage=(screen,actor)=>{const g=RolePolicy.get(actor).group;if(screen==='U03'&&g==='admin')return ['F09'];if(screen==='M05')return ['F04'];if(['X01','X02'].includes(screen))return ({teacher:['F07'],academic:['F06'],recorder:['F05','F06'],invigilator:['F04','F06'],admin:['F06','F09']}[g]||[]);return features.filter(f=>f.pages.includes(screen)).map(f=>f.id);};window.PRD={version:'0.15.0',features,roles,gates,rules,forPage,pagesFor:id=>Catalog.filter(n=>forPage(n.screen||n.id,n.as).includes(id))};Catalog.forEach(n=>{n.features=forPage(n.screen||n.id,n.as);n.f=n.features.join(' / ');});})();
+const forPage=(screen,actor)=>{const g=RolePolicy.get(actor).group;if(screen==='U03'&&g==='admin')return ['F09'];if(screen==='M05')return ['F04'];if(['X01','X02'].includes(screen))return ({teacher:['F07'],academic:['F06'],recorder:['F05','F06'],invigilator:['F04','F06'],admin:['F06','F09']}[g]||[]);return features.filter(f=>f.pages.includes(screen)).map(f=>f.id);};window.PRD={version:'0.15.1',features,roles,gates,rules,forPage,pagesFor:id=>Catalog.filter(n=>forPage(n.screen||n.id,n.as).includes(id))};Catalog.forEach(n=>{n.features=forPage(n.screen||n.id,n.as);n.f=n.features.join(' / ');});})();

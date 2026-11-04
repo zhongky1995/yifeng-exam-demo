@@ -1094,6 +1094,7 @@
                     };
                     e.deviceChecked = true;
                     message = '固定安卓机、镜像预览与大屏投射检查已记录。';
+                    if(e.current&&e.records[e.current]?.handoff==='pending')target='A04';
                     break;
                 case 'accept-person':
                     group('recorder');
