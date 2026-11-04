@@ -83,5 +83,5 @@
  case 'confirm-schedule':{const result=H.execute('save-exam-schedule',{schedule:s.schedule,expectedRosterRev:s.rosterRev,expectedScheduleRev:s.scheduleRev,verified:!!v.verified});if(result.ok){cache.delete(key('schedule'));try{localStorage.removeItem(key('schedule'));}catch{}}break;}
  }}catch(e){tell(H.screen==='W11'?'import':'schedule',e.message);}});
  }
- window.RosterUIV13={importPage,schedulePage};
+ window.RosterUIV13={importPage,schedulePage,clearScope:scope=>{const prefix=scope+':';for(const k of cache.keys())if(k.startsWith(prefix)&&/^[^:]+:(?:import|schedule)13$/.test(k.slice(prefix.length)))cache.delete(k);}};
 })();

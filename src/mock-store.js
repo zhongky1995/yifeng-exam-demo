@@ -656,7 +656,10 @@
         write(d);
     }
 
+    function clearPreparationDrafts(){const prefix=KEY+':';try{for(const k of Object.keys(localStorage))if(k.startsWith(prefix)&&/^[^:]+:(?:import|schedule)13$/.test(k.slice(prefix.length)))localStorage.removeItem(k);}catch{}window.RosterUIV13?.clearScope?.(KEY);}
+
     function reset(preset = 'start') {
+        clearPreparationDrafts();
         write(seed(preset));
     }
 
@@ -1543,7 +1546,7 @@
         now: clock,
         advancePreparationDemo,
         resetPageSample: () => {
-            if (pageSample) write(pageSeed(pageSample));
+            if (pageSample) {clearPreparationDrafts();write(pageSeed(pageSample));}
         },
         advanceWalk,
         subjects,
@@ -1568,14 +1571,14 @@
     };
     if (pageSample && !params.has('preview')) {
         try {
-            if (!localStorage.getItem(KEY)) write(pageSeed(pageSample));
+            if (!localStorage.getItem(KEY)) {clearPreparationDrafts();write(pageSeed(pageSample));}
         } catch {
             write(pageSeed(pageSample));
         }
     }
     if (walk) {
         try {
-            if (params.get('walkReset') === '1' || !localStorage.getItem(KEY)) write(walkSeed(walk));
+            if (params.get('walkReset') === '1' || !localStorage.getItem(KEY)) {clearPreparationDrafts();write(walkSeed(walk));}
         } catch {
             write(walkSeed(walk));
         }
