@@ -68,7 +68,7 @@ const features=[
       "机构编号去首尾空格、全半角和英文字母大小写归一比较；文件内重复或编号姓名冲突拦截，本场已有跳过，同名不同编号须核对。",
       "导入仅新增，不覆盖已存在考生、执行记录或分配；新增后需重新确认安排。",
       "每位考生分配唯一班次和考场，排次在班次×考场内唯一；缺分配、超人数、重复排次及同考点同名考场时间重叠时不能确认。",
-      "筛选结果可跨页全选，改变筛选会清空选择。自动按名单顺序接续已有排次，全部考场按顺序填满；也可指定起始排次。先预览每人去向再确认草稿，容量不足或排次冲突整次不改。",
+      "筛选条件修改后先应用，未应用时暂停选人和分配；应用新筛选后清空选择。筛选结果可跨页全选。自动按名单顺序接续已有排次，全部考场按顺序填满；也可指定起始排次。先预览每人去向再确认草稿，容量不足或排次冲突整次不改。",
       "已开放只读；学生只能看本人安排，看安排不等于已签到。"
     ],
     "result": "全部考生都有明确班次、考场、报到及考试时段、排次；可导出安排Excel。",
@@ -243,7 +243,7 @@ const features=[
       "投屏题目字号增大，短题换行居中构图，古诗文/现代文保持上下结构。"
     ],
     "result": "生成三段独立视频，录制员分别检查后提交技术检查。",
-    "exception": "准备语音失败停在本科准备并可重播；保存失败停在本科原任务；暂停接续后再恢复；原片详情固定原考生。",
+    "exception": "设备检查漏项时保留已勾选内容并提示缺项；准备语音失败停在本科准备并可重播；保存失败停在本科原任务；暂停接续后再恢复；原片详情固定原考生。",
     "example": [
       "当前A接收完成",
       "启动三科，提前结束一科，观察缓冲与下一科",
@@ -801,4 +801,4 @@ const rules=[
     "建议本班次现场结束后由教务统一开放，逐科已收到并核验通过才能播放；与评分提交和成绩核查分开，下载/分享和保存期限待确认。"
   ]
 ];
-const forPage=(screen,actor)=>{const g=RolePolicy.get(actor).group;if(screen==='U03'&&g==='admin')return ['F09'];if(screen==='M05')return ['F04'];if(['X01','X02'].includes(screen))return ({teacher:['F07'],academic:['F06'],recorder:['F05','F06'],invigilator:['F04','F06'],admin:['F06','F09']}[g]||[]);return features.filter(f=>f.pages.includes(screen)).map(f=>f.id);};window.PRD={version:'0.15.1',features,roles,gates,rules,forPage,pagesFor:id=>Catalog.filter(n=>forPage(n.screen||n.id,n.as).includes(id))};Catalog.forEach(n=>{n.features=forPage(n.screen||n.id,n.as);n.f=n.features.join(' / ');});})();
+const forPage=(screen,actor)=>{const g=RolePolicy.get(actor).group;if(screen==='U03'&&g==='admin')return ['F09'];if(screen==='M05')return ['F04'];if(['X01','X02'].includes(screen))return ({teacher:['F07'],academic:['F06'],recorder:['F05','F06'],invigilator:['F04','F06'],admin:['F06','F09']}[g]||[]);return features.filter(f=>f.pages.includes(screen)).map(f=>f.id);};window.PRD={version:'0.15.2',features,roles,gates,rules,forPage,pagesFor:id=>Catalog.filter(n=>forPage(n.screen||n.id,n.as).includes(id))};Catalog.forEach(n=>{n.features=forPage(n.screen||n.id,n.as);n.f=n.features.join(' / ');});})();
