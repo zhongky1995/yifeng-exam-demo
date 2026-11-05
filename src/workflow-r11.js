@@ -8,7 +8,7 @@
   const stamp = () => new Date().toLocaleString('sv-SE', {timeZone:'Asia/Shanghai'});
   function beginPreparation(r,d){r.stage='intro';r.preparationSeq=(r.preparationSeq||0)+1;r.introState=r.introAudioOwner?'awaiting_audio':'demo';r.introStarted=r.introAudioOwner?0:now(d);r.phaseDeadline=r.introAudioOwner?0:now(d)+ExamSpec.prepareCues[r.subject].totalMs;}
   function decorate(d) {
-    RoomStaffV14.decorate(d);for(const e of Object.values(d.exams))ExamScopeV15.decorate(e);
+    RoomStaffV14.decorate(d);Personnel.prepare(d);for(const e of Object.values(d.exams))ExamScopeV15.decorate(e);
     for (const e of Object.values(d.exams)) {
       e.site ??= '示例校区A · 教学楼2层';
       e.batchLabel ??= '上午批';
@@ -139,8 +139,12 @@
         group('invigilator');person();needs(e.current===p&&r.technicalSubmitted,'请等待本位三科技术检查提交。');needs(r.files.every(f=>f?.localReviewed&&f.serverVerified&&!f.abnormal),'方案R03当前演示：三科后台收到并完整核验后才可放行。');needs(input.verified,'请核对本位三科检查/接收结果。');needs(!onsiteBlocked(e,p),'本位仍有视频问题待处理。');
         r.onsiteEnded=true;r.stage='done';e.current=null;e.lastEnded=p;for(const x of e.exceptions.filter(x=>x.person===p&&x.status==='executing'&&['material','retake','replace'].includes(x.type)))x.status='awaiting_material';
         return result('已确认放行本位，考位释放；原学员视频、题组和记录保留。','M04');
+      case 'save-personnel':
+        group('admin');Personnel.save(d,input.kind,input.rows,input.rev);return result('人员名单已保存。');
+      case 'toggle-personnel':
+        group('admin');Personnel.toggle(d,input.kind,input.code);return result('人员状态已更新。');
       case 'save-assignments': {
-        group('admin','academic');const arr=input.assignments;needs(arr?.length===3&&arr.every(v=>v.length&&v.every(t=>Number.isInteger(t)&&t>=0&&t<6)),'每科至少分配一名可用评卷老师。');
+        group('admin','academic');const arr=input.assignments;needs(arr?.length===3&&arr.every(v=>v.length&&v.every(t=>Number.isInteger(t)&&d.reviewers[t]?.active)),'每科至少分配一名可用评卷老师。');
         const flat=arr.flat();needs(new Set(flat).size===flat.length,'同一考试内一位评卷老师只能负责一科；同科可分配多位评委。');needs(!Object.keys(e.scores).length,'已有评分时不能直接改变评委集合。');
         e.assignments=structuredClone(arr);e.assignmentRev++;decorate(d);return result('已按单老师单科保存分工；每名评委仍评本科全部应评对象。');
       }

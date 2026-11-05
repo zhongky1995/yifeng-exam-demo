@@ -19,5 +19,21 @@
  studentC:{id:'studentC',label:'学生C',name:'示例学员C',group:'student',studentId:'C',home:'S00'}
  };const staffLabels=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸','十一','十二'];for(let i=3;i<=12;i++)for(const role of ['invigilator','recorder']){const id=role+'-staff'+i;actors[id]={id,label:(role==='invigilator'?'监考员':'录制员')+staffLabels[i-1],name:'工作人员'+staffLabels[i-1],group:role,staffId:'staff'+i,home:role==='invigilator'?'M00':'A00'};}Object.values(actors).forEach(a=>a.pages=groups[a.group]);
  const get=id=>actors[id]||{id:'unknown',name:'未识别身份',label:'未识别身份',group:'unknown',home:'U02',pages:[]};
- window.RolePolicy={actors,get,canOpen:(id,p)=>get(id).pages.includes(p),defaultActor:p=>/^S|^D/.test(p)?'studentA':/^A/.test(p)?'recorder':/^M/.test(p)?'invigilator':['W05','W06','W16','W17'].includes(p)?'teacher1':['U03','W01','W04','W07','W08','W10','W11','W12','W14','W18','W26','W27','P01'].includes(p)?'academic':'admin'};
+ let directorySignature='';
+ function register(staff,reviewers) {
+   const signature=JSON.stringify([staff,reviewers]);if(signature===directorySignature)return;directorySignature=signature;
+   for(const actor of Object.values(actors))if(['invigilator','recorder','teacher'].includes(actor.group))actor.active=false;
+   function put(id,group,person,extra,home) {
+     const actor=actors[id]||{id,group,home,pages:groups[group]};
+     Object.assign(actor,extra,{name:person.name,label:group==='teacher'?person.name:(group==='invigilator'?'监考 · ':'录制 · ')+person.name,active:person.active});
+     actors[id]=actor;
+   }
+   for(const p of reviewers)put('teacher'+(p.id+1),'teacher',p,{teacher:p.id},'W05');
+   for(const p of Object.values(staff))for(const role of ['invigilator','recorder']){
+     const first=p.id==='staff1',second=p.id==='staff2';
+     const id=first||second?role+((role==='invigilator'?first:second)?'':'2'):role+'-'+p.id;
+     put(id,role,p,{staffId:p.id},role==='recorder'?'A00':'M00');
+   }
+ }
+ window.RolePolicy={actors,get,register,canOpen:(id,p)=>get(id).pages.includes(p),defaultActor:p=>/^S|^D/.test(p)?'studentA':/^A/.test(p)?'recorder':/^M/.test(p)?'invigilator':['W05','W06','W16','W17'].includes(p)?'teacher1':['U03','W01','W04','W07','W08','W10','W11','W12','W14','W18','W26','W27','P01'].includes(p)?'academic':'admin'};
 })();

@@ -153,6 +153,18 @@
         };
     }
 
+    function callOrder(e) {
+        const waiting = e.queue.filter(id => !e.records[id].onsiteEnded && e.records[id].attendance !== 'absent');
+        const at=clock();
+        const next = waiting.find(id => {
+            const r = e.records[id];
+            return r.checkin && r.draw && !r.drawPending && preparation(r,at).state === 'ready';
+        });
+        const skipped = next ? waiting.slice(0, waiting.indexOf(next)) : [];
+        const busy = !!e.current || (e.transferPending ?? (!!pendingTransfer(e,'invigilator') || !!pendingTransfer(e,'recorder')));
+        return {next, skipped, busy};
+    }
+
     function advancePreparationDemo(examId, person) {
         if (!walk && !fixture) return {
             ok: false,
@@ -675,6 +687,7 @@
     }
 
     function allowedExam(a, e) {
+        if(a.active===false)return false;
         return ['admin', 'academic'].includes(a.group) || a.group === 'teacher' && e.assignments.some(v => v.includes(a.teacher)) || a.group === 'student' && e.status!=='draft' && e.roster.includes(a.studentId) || ['invigilator', 'recorder'].includes(a.group) && (ExamScopeV15.tasks(e,a).length || e.transfers.some(t => t.from === a.staffId || t.to === a.staffId));
     }
 
@@ -689,6 +702,7 @@
         draw: r.draw,
         drawPending: r.drawPending,
         handoff: r.handoff,
+
         onsiteEnded: r.onsiteEnded,
         attendance: r.attendance,
         prepStarted: r.prepStarted,
@@ -698,7 +712,7 @@
         stage: r.stage,
         started: r.started,
         technicalSubmitted: r.technicalSubmitted,
-        technicalBlocked: e ? onsiteBlocked(e, r.id) : false,
+        technicalBlocked: !!e && (onsiteBlocked(e,r.id) || r.files.some(f=>f?.abnormal)),
         mediaProgress: r.files.map(f => ({
             id:f?.id,serverVerified:!!f?.serverVerified,duration:f?.duration,
             saved: !!f?.local,
@@ -715,6 +729,7 @@
         const out = {
             actor: a,
             staff: clone(d.staff),
+            ...(['academic','admin'].includes(a.group)?{reviewers:clone(d.reviewers),personnelRev:d.personnelRev}:{}),
             faults: clone(d.faults),
             reviewTimeOffset: d.reviewTimeOffset || 0,
             storageError,
@@ -776,7 +791,7 @@
                     upload: f.upload,
                     abnormal: f.abnormal
                 } : null);
-                delete r.history;
+                delete r.history;delete r.callRecord;
                 delete r.checkinAt;
             }
             e.exceptions = e.exceptions.filter(x => x.by === actorId).map(x => clone(x));
@@ -813,10 +828,11 @@
             return out;
         }
         e.publications = [];
+        e.transferPending=!!pendingTransfer(e,'invigilator')||!!pendingTransfer(e,'recorder');
         e.transfers = e.transfers.filter(t => t.from === a.staffId || t.to === a.staffId);
         if (a.group === 'invigilator') {
             out.people = ExamScopeV15.owned(a,source,scopeKey) ? clone(rosterPeople.filter(p => e.roster.includes(p.id))) : [];
-            e.records = ExamScopeV15.owned(a,source,scopeKey) ? Object.fromEntries(Object.entries(e.records).filter(([id])=>e.roster.includes(id)).map(([p, r]) => [p, publicRecord(r, source)])) : {};
+            e.records = ExamScopeV15.owned(a,source,scopeKey) ? Object.fromEntries(Object.entries(e.records).filter(([id])=>e.roster.includes(id)).map(([p, r]) => [p, {...publicRecord(r, source),callRecord:r.callRecord}])) : {};
             e.exceptions = e.exceptions.filter(v => ['absence', 'reorder', 'redraw', 'return'].includes(v.type));
         } else if (a.group === 'recorder') {
             const ids = source.roster.filter(p => e.current === p && ExamScopeV15.owned(a,source,scopeKey) || source.records[p].files.some(f => f?.custodian === a.staffId) || source.records[p].history.some(v => v.some(f => f.custodian === a.staffId)));
@@ -930,7 +946,7 @@
                     n.paperSelected = old.paperSelected;
                     n.paperComplete = old.paperComplete;
                 }
-                Object.assign(n,{rosterRev:1,scheduleRev:0,scheduleRequired:true,arrangementConfirmed:false,site:input.site||'示例校区A · 教学楼2层',batchLabel:input.batchLabel||'上午批',slot:input.slot||n.slot});
+                Object.assign(n,{referenceClasses:input.referenceClasses||[],rosterRev:1,scheduleRev:0,scheduleRequired:true,arrangementConfirmed:false,site:input.site||'示例校区A · 教学楼2层',batchLabel:input.batchLabel||'上午批',slot:input.slot||n.slot});
                 d.exams[nid] = n;
                 write(d);
                 return {
@@ -1075,16 +1091,20 @@
                     needs(!e.current, '场内仍有当前学员，请等本位现场结束。');
                     needs(r.checkin && r.draw && !r.drawPending && !r.onsiteEnded && r.attendance !== 'absent', '本位签到、抽题确认或候考条件尚未满足。');
                     needs(preparation(r).state === 'ready', preparation(r).label + '，请在备稿结束后安排入场。');
-                    const next = e.queue.find(id => !e.records[id].onsiteEnded && e.records[id].attendance !== 'absent');
-                    needs(next === p, '请先处理队首学员，过号或调整顺序请登记现场申请。');
+                    const order = callOrder(e);
+                    needs(order.next === p, '候考状态已更新，请核对本考场下一位就绪考生。');
+                    needs((input.skipIds || '') === order.skipped.join(','), '暂过名单已变化，请重新核对后叫号。');
+                    r.callRecord = {at: stamp(), by: a.name, order: r.plan?.order || r.seat,
+                        skipped: order.skipped.map(id => ({id, reason: preparation(e.records[id]).label}))};
                     e.current = p;
                     r.handoff = 'pending';
                     e.status = 'live';
-                    message = '已发出本位交接，等待录制员确认接收。';
+                    message = (order.skipped.length ? '暂过'+order.skipped.join('、')+'；' : '') + '已发出'+p+'的交接，等待录制员确认接收。';
                     target = 'M04';
                     break;
                 case 'check-device':
                     group('recorder');
+                    needs(input.expectedPerson===undefined||(input.expectedPerson===(e.current||'')&&Number(input.expectedStaffRev||0)===Number(e.staffRev||0)),'当前考生或考场岗位已变化，请重新复核。');
                     needs(!busy(e), '当前正在录制或保存，不能切换摄像头或更改设备检查。');
                     needs(input.verified, '请逐项确认固定机位、声音和手机投屏。');
                     needs(!input.lens || ['rear', 'front'].includes(input.lens), '请选择前置或后置摄像头。');
@@ -1094,7 +1114,7 @@
                     };
                     e.deviceChecked = true;
                     message = '固定安卓机、镜像预览与大屏投射检查已记录。';
-                    if(e.current&&e.records[e.current]?.handoff==='pending')target='A04';
+                    if(!e.current||e.records[e.current]?.handoff==='pending')target='A04';
                     break;
                 case 'accept-person':
                     group('recorder');
@@ -1560,11 +1580,11 @@
     window.YF = {
         KEY,
         pulse:()=>{const d=read();if(WorkflowRevision.pulse(d,{fullFile}))write(d);},
-        advanceRecordingDemo:()=>{if(!fixture&&!walk)return {ok:false,message:'仅在独立样例中模拟时间。'};const d=read(),e=d.exams.EX1;const a=RolePolicy.get(params.get('as')||'recorder');if(ExamScopeV15.staffRole(a))ExamScopeV15.begin(e,a,params.get('room')||'');const advance=WorkflowRevision.advance(d,e);if(!advance.ok)return advance;WorkflowRevision.pulse(d,{fullFile});write(d);return {ok:true,message:'已推进本阶段演示时钟；仍按原保存和缓冲条件接续。'};},
+        advanceRecordingDemo:(examId=params.get('exam')||'EX1')=>{if(!fixture&&!walk)return {ok:false,message:'仅在独立样例中模拟时间。'};const d=read(),e=d.exams[examId],a=RolePolicy.get(params.get('as')||'recorder');if(!e||!ExamScopeV15.staffRole(a)||!ExamScopeV15.begin(e,a,params.get('room')||''))return {ok:false,message:'本场暂无本人录制任务。'};const advance=WorkflowRevision.advance(d,e);if(!advance.ok)return advance;WorkflowRevision.pulse(d,{fullFile});write(d);return {ok:true,message:'已推进本阶段演示时钟；仍按原保存和缓冲条件接续。'};},
         fixture,
         walk,
         pageSample,
-        preparation,
+        preparation, callOrder,
         now: clock,
         advancePreparationDemo,
         resetPageSample: () => {
@@ -1591,6 +1611,7 @@
         mean: (examId, q, p) => mean(read().exams[examId], q, p),
         snapshot
     };
+    read(); // Hydrate locally maintained role identities before rendering a direct task link.
     if (pageSample && !params.has('preview')) {
         try {
             if (!localStorage.getItem(KEY)) {clearPreparationDrafts();write(pageSeed(pageSample));}
