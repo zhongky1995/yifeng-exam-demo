@@ -7,3 +7,17 @@
 /* Student's own exam replay: no scoring information. */
 .replay-exam-meta h2{margin:8px 0}.replay-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0}.replay-tab{display:flex;flex-direction:column;gap:8px;text-decoration:none;background:#fff;border:1px solid #dce5d7;border-radius:12px;padding:16px 12px;color:#3f503a;min-height:85px}.replay-tab small{font-size:12px;color:#6d7866}.replay-tab.active{border:2px solid #4b8137;background:#edf5e7;padding:15px 11px}.replay-tab:focus-visible{outline:3px solid #97b780;outline-offset:2px}.replay-player video{width:100%;aspect-ratio:16/9;object-fit:contain;background:#17321f;border-radius:12px;display:block}.replay-empty{text-align:center;padding:42px 20px}.replay-status-icon{display:inline-grid;place-items:center;width:64px;height:64px;background:#edf2e7;border-radius:50%;font-size:28px;color:#66835a;margin:0 auto 16px}.replay-empty h2{margin:8px 0}.replay-empty p{line-height:1.8}.replay-empty .actions{justify-content:center}#replay-player-feedback:not(:empty){padding:12px;margin:12px 0;background:#fff2e6;border-radius:8px;color:#805535}@media(max-width:600px){.replay-tab{padding:14px 8px;font-size:13px;min-height:78px}.replay-tab.active{padding:13px 7px}.replay-tab small{font-size:11px}.replay-tabs{gap:7px}.replay-player{padding:18px}.replay-player h2{font-size:20px}}
 body[data-screen="S08"] .journey-trail{display:none}.replay-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 0 14px;color:#67745f;font-size:14px}body[data-screen="S08"] .page-heading{margin-bottom:12px}body[data-screen="S08"] .replay-player h2{margin-top:0;margin-bottom:12px}@media(max-width:600px){body[data-screen="S08"] .phone-top{padding:14px 20px}body[data-screen="S08"] .phone-main{padding-top:16px}.replay-summary{font-size:12px}body[data-screen="S08"] .replay-tabs{margin:12px 0}body[data-screen="S08"] .replay-player{margin-top:12px}}
+
+/* Missing-review tasks keep their action visible on phones. */
+@media(max-width:600px){
+ .batch-review-panel .table-scroll{overflow:visible}
+ .batch-review-panel table,.batch-review-panel tbody{display:block;width:100%;min-width:0}
+ .batch-review-panel thead{display:none}
+ .batch-review-panel tbody tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 8px;padding:12px 0;border-bottom:1px solid var(--line,#dce5d7)}
+ .batch-review-panel td{display:block;min-width:0;padding:4px 0;border:0;white-space:normal}
+ .batch-review-panel td:first-child{grid-column:1/-1;font-weight:700}
+ .batch-review-panel td:nth-child(2)::before{content:'本人分数：';display:block;font-size:12px;color:#657264}
+ .batch-review-panel td:nth-child(3)::before{content:'状态：';display:block;font-size:12px;color:#657264}
+ .batch-review-panel td:last-child{grid-column:1/-1}
+ .batch-review-panel td:last-child .button{width:100%;min-height:44px}
+}

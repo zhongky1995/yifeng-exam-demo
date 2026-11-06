@@ -85,9 +85,9 @@
         group('recorder');person();needs(input.verified,'请先核对考号、机位和原题组，再确认接收。');return null;
       case 'force-end-preparation':
         group('invigilator');person();needs(r.draw && r.prepStarted && !r.handoff?.match(/pending|accepted/) && !r.onsiteEnded,'仅能结束已抽题、尚未交接的本人考场学员备考。');
-        needs(!r.forcePrepEnd && Date.now()+(d.reviewTimeOffset||0)<r.prepStarted+900000,'本人备考已结束，无需重复结束。');needs(input.reason?.trim(),'请说明提前结束备考原因。');
-        r.forcePrepEnd=Date.now()+(d.reviewTimeOffset||0);r.forcePrepReason=input.reason.trim();r.forcePrepBy=a.name;
-        return result('已按方案R01结束该生备考，原自然截止与原因保留；仍需监考叫号交接。');
+        needs(!r.forcePrepEnd && Date.now()+(d.reviewTimeOffset||0)<r.prepStarted+900000,'本人备考已结束，无需重复结束。');needs(input.confirmed===true,'请确认提前结束该生备考。');
+        r.forcePrepEnd=Date.now()+(d.reviewTimeOffset||0);r.forcePrepReason='';r.forcePrepBy=a.name;
+        return result('已按方案R01结束该生备考，原自然截止、结束时间和操作人保留；仍需监考叫号交接。');
       case 'start-record':
         group('recorder');currentPerson();needs(e.deviceChecked,'请先完成设备检查。');needs(r.stage==='ready'&&!r.files[q]&&r.subject===q,'当前科目尚不具备启动条件。');
         r.captureOwner=a.staffId;r.autoSequence=true;r.pauseNext=false;r.introAudioOwner=input.audioOwner||'';beginPreparation(r,d);
@@ -102,10 +102,10 @@
         group('recorder');currentPerson();needs(r.stage==='intro'&&r.introAudioOwner===input.audioOwner,'当前提示已变化。');r.introState='audio_failed';r.phaseDeadline=0;return result('开考提示未能播放完成，请点击重播。正式计时尚未开始。');
       case 'finish-record': case 'end-subject-early':
         group('recorder');currentPerson();needs(r.stage==='recording'&&r.subject===q,'当前没有正在录制的本科。');
-        if(command==='end-subject-early')needs(input.reason?.trim(),'请说明提前结束原因。');
+        if(command==='end-subject-early')needs(input.confirmed===true,'请确认提前结束本科录制。');
         r.stopDuration=input.auto?ExamSpec.durations[q]:Math.max(1,Math.min(ExamSpec.durations[q],Math.round((now(d)-r.started)/1000)));
-        r.stopReason=command==='end-subject-early'?input.reason.trim():input.auto?'本科到时':'工作人员结束本科';
-        r.endedAt=now(d);r.stage='saving';r.saveAt=now(d)+650;
+        r.stopReason=command==='end-subject-early'?'工作人员确认提前结束':input.auto?'本科到时':'工作人员结束本科';
+        r.endedBy=a.name;r.endedAt=now(d);r.stage='saving';r.saveAt=now(d)+650;
         return result('本科已结束，正在保存原片；保存未成功不会开下一科。');
       case 'query-save': case 'retry-save':
         group('recorder');currentPerson();needs(['saving','save_failed'].includes(r.stage),'当前没有待恢复的保存任务。');
@@ -128,7 +128,7 @@
       case 'end-person':
         group('recorder');currentPerson();needs(r.files.length===3&&r.files.every(f=>f?.local&&f.localReviewed&&!f.abnormal),'三科须分别保存并完成原片检查。');needs(input.verified,'请确认三科检查结果后提交。');needs(!onsiteBlocked(e,p),'本位仍有视频问题待处理。');
         r.technicalSubmitted=true;r.stage='awaiting_release';for(const f of r.files)if(f.upload!=='received'){f.upload='uploading';f.uploadUntil=now(d)+1400;}
-        return result('三科技术检查已提交，系统排队上传；监考集中监督并按方案R03条件放行。','A06');
+        return result('三科技术检查已提交，系统排队上传；监考监督上传；三科接收核验齐备后，由录制员确认本生现场结束。','A06');
       case 'begin-upload': case 'query-upload': case 'retry-upload': {
         group('invigilator','recorder');const f=findFile(e,input.fileId);needs(f?.local&&f.localReviewed&&!f.abnormal,'原片尚未保存/检查或存在异常。');needs(e.records[f.person]?.technicalSubmitted,'请先完成三科技术检查提交。');
         if(a.group==='recorder')return result('上传由系统排队，监考负责集中监督及重试；录制员只查看原文件状态。');
@@ -136,9 +136,9 @@
         return result('已在原文件任务上继续上传，归属与版本保持。');
       }
       case 'release-person':
-        group('invigilator');person();needs(e.current===p&&r.technicalSubmitted,'请等待本位三科技术检查提交。');needs(r.files.every(f=>f?.localReviewed&&f.serverVerified&&!f.abnormal),'方案R03当前演示：三科后台收到并完整核验后才可放行。');needs(input.verified,'请核对本位三科检查/接收结果。');needs(!onsiteBlocked(e,p),'本位仍有视频问题待处理。');
-        r.onsiteEnded=true;r.stage='done';e.current=null;e.lastEnded=p;for(const x of e.exceptions.filter(x=>x.person===p&&x.status==='executing'&&['material','retake','replace'].includes(x.type)))x.status='awaiting_material';
-        return result('已确认放行本位，考位释放；原学员视频、题组和记录保留。','M04');
+        group('recorder');currentPerson();needs(e.current===p&&r.technicalSubmitted,'请等待本位三科技术检查提交。');needs(r.files.length===3&&r.files.every(f=>f?.local&&f.localReviewed&&f.serverVerified&&!f.abnormal),'三科须保存、检查且后台收到并完整核验，才能确认现场结束。');needs(input.verified,'请核对本位三科检查/接收结果。');needs(!onsiteBlocked(e,p),'本位仍有视频问题待处理。');
+        r.onsiteEnded=true;r.onsiteEndedAt=stamp();r.onsiteEndedBy=a.name;r.stage='done';e.current=null;e.lastEnded=p;for(const x of e.exceptions.filter(x=>x.person===p&&x.status==='executing'&&['material','retake','replace'].includes(x.type)))x.status='awaiting_material';
+        return result('已确认本生现场结束，考位已释放；监考收到完成回执后可叫下一位。','A06');
       case 'save-personnel':
         group('admin');Personnel.save(d,input.kind,input.rows,input.rev);return result('人员名单已保存。');
       case 'toggle-personnel':
@@ -194,7 +194,7 @@
         else if(r.stage==='saving'&&r.saveAt<=at){
           if(d.faults.saveFail){r.stage='save_failed';changed=true;continue;}
           const q=r.subject;
-          if(!r.files[q])r.files[q]={...helpers.fullFile(e,r.id,q,r.history[q].length+1,r.captureOwner||ExamScopeV15.fileOwner(e,r.id)),upload:'none',localReviewed:false,checked:false,serverVerified:false,duration:r.stopDuration||ExamSpec.durations[q],early:(r.stopDuration||ExamSpec.durations[q])<ExamSpec.durations[q],endReason:r.stopReason||'本科到时',recorded:true};
+          if(!r.files[q])r.files[q]={...helpers.fullFile(e,r.id,q,r.history[q].length+1,r.captureOwner||ExamScopeV15.fileOwner(e,r.id)),upload:'none',localReviewed:false,checked:false,serverVerified:false,duration:r.stopDuration||ExamSpec.durations[q],early:(r.stopDuration||ExamSpec.durations[q])<ExamSpec.durations[q],endReason:r.stopReason||'本科到时',endedAt:r.endedAt,endedBy:r.stopReason==='本科到时'?'系统到时':r.endedBy,recorded:true};
           const next=r.files.findIndex(f=>!f);if(next<0){r.stage='saved';}
           else if(r.autoSequence){r.subject=next;if(r.pauseNext)r.stage='awaiting_next';else beginPreparation(r,d);}
           else r.stage='saved';

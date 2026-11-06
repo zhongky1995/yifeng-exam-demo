@@ -612,11 +612,12 @@
                 if(!e.records.A.onsiteEnded)throw Error('请先接看本人现场结束状态。');
                 for(const r of Object.values(e.records))for(const f of r.files.filter(Boolean))Object.assign(f,{upload:'received',serverVerified:true,checked:true});
                 e.studentVideoRelease={enabled:true,at:stamp(),by:'academic'};
-            } else if (action === 'released' && walk === 'recorder') {
+            } else if (action === 'released' && walk === 'invigilator') {
                 const r = e.records[e.current];
                 if (!r?.technicalSubmitted) throw Error('先提交三科技术检查。');
                 r.files.forEach(f=>{f.upload='received';f.serverVerified=true;});
                 r.onsiteEnded = true;
+                r.onsiteEndedAt=stamp();r.onsiteEndedBy=d.staff[e.staff.recorder]?.name||'录制员（虚构样例）';
                 r.stage = 'done';
                 e.lastEnded = r.id;
                 e.current = null;
@@ -704,6 +705,7 @@
         handoff: r.handoff,
 
         onsiteEnded: r.onsiteEnded,
+        onsiteEndedAt:r.onsiteEndedAt,onsiteEndedBy:r.onsiteEndedBy,
         attendance: r.attendance,
         prepStarted: r.prepStarted,
         plan:r.plan,
@@ -861,7 +863,7 @@
         for (const p of e.roster) {
             const r = e.records[p];
             if(r.attendance==='absent')continue;
-            if (!r.onsiteEnded || !r.technicalSubmitted) list.push(`${p}现场技术核验与监考放行未完成`);
+            if (!r.onsiteEnded || !r.technicalSubmitted) list.push(`${p}现场技术核验与录制员确认结束未完成`);
             for (let q = 0; q < 3; q++) {
                 const f = r.files[q];
                 if (!f || f.abnormal || f.upload !== 'received' || !f.checked || !e.opened[q] || fileBlocked(e, p, q)) list.push(`${p}的${subjects[q]}材料未就绪`);
@@ -1177,31 +1179,6 @@
                     r.stage = 'ready';
                     message = '已进入下一科准备。';
                     break;
-                case 'end-person':
-                    group('recorder');
-                    currentPerson();
-                    needs(r.files.every(f => f?.local && f.localReviewed && !f.abnormal && f.upload !== 'none'), '三科尚未完整保存并完成技术检查。');
-                    needs(input.verified, '请确认三科身份、画面、声音、时长与保存状态均已核对。');
-                    needs(!onsiteBlocked(e, p), '仍有视频问题待处理，不能提交技术核验。');
-                    r.technicalSubmitted = true;
-                    r.stage = 'awaiting_release';
-                    message = '技术检查已提交，等待监考确认放行。当前考位尚未释放。';
-                    target = 'A06';
-                    break;
-                case 'release-person':
-                    group('invigilator');
-                    person();
-                    needs(e.current === p && r.technicalSubmitted && r.stage === 'awaiting_release', '请先等待录制员提交本位三科技术检查。');
-                    needs(input.verified, '请核对本人的三科技术检查结果后确认放行。');
-                    needs(r.files.every(f => f?.localReviewed && !f.abnormal) && !onsiteBlocked(e, p), '三科技术检查仍有缺失或视频问题，不能放行。');
-                    r.onsiteEnded = true;
-                    r.stage = 'done';
-                    e.current = null;
-                    e.lastEnded = p;
-                    for (const x of e.exceptions.filter(x => x.person === p && ['retake', 'replace', 'material'].includes(x.type) && x.status === 'executing')) x.status = 'awaiting_material';
-                    message = '监考已确认放行，当前考位释放。原文件继续按本人、本科上传，下一位可接续。';
-                    target = 'M04';
-                    break;
                 case 'save-score-policy':
                     group('admin');
                     {
@@ -1235,7 +1212,7 @@
                     group('admin', 'academic');
                     person();
                     qValid();
-                    needs(r.onsiteEnded && r.technicalSubmitted, '请等待录制员提交技术检查并由监考确认放行，再进行考后评分材料核验。');
+                    needs(r.onsiteEnded && r.technicalSubmitted, '请等待录制员提交技术检查并由录制员确认现场结束，再进行考后评分材料核验。');
                     needs(r.files[q]?.upload === 'received' && !r.files[q].abnormal, '后台尚无可核验的完整视频。');
                     r.files[q].checked = true;
                     for (const x of e.exceptions.filter(x => x.person === p && x.q === q && ['awaiting_material', 'executing'].includes(x.status))) {
