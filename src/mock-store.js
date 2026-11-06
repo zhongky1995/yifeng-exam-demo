@@ -936,6 +936,15 @@
             needs(a.group !== 'unknown', '请选择有效的体验身份。');
             const localCommands = [...WorkflowRevision.localCommands, 'draft-score', 'start-record', 'finish-record', 'query-save', 'interrupt-record', 'verify-local', 'next-subject', 'end-person'];
             needs(!d.faults.offline || localCommands.includes(command), '当前离线。原记录保留，恢复连接后继续此操作。');
+            if (command === 'create-class') {
+                group('academic', 'admin');
+                const className=String(input.className||'').trim().normalize('NFC');
+                needs(className&&className.length<=80&&!/[\u0000-\u001f\u007f]/.test(className),'请输入1–80字的班级名称。');
+                const existing=[...(d.classNames||[]),...RosterV13.people(d,students).map(p=>p.class),...Object.values(d.exams).flatMap(e=>e.referenceClasses||[])].filter(Boolean);
+                needs(!existing.some(n=>n.trim().normalize('NFC').toLocaleLowerCase()===className.toLocaleLowerCase()),'该班级已存在，请在班级列表中选择，无需重复新增。');
+                (d.classNames??=[]).push(className);write(d);
+                return {ok:true,className,message:'班级已新增并选中；请继续建立考试，再导入该班考生名单。'};
+            }
             if (command === 'create-exam') {
                 group('admin', 'academic');
                 needs(input.name?.trim() && input.date, '请填写考试名称和日期。');
@@ -1570,6 +1579,7 @@
         advanceWalk,
         subjects,
         get students(){return RosterV13.people(read(),students);},
+        get classes(){const d=read();return [...new Set([...(d.classNames||[]),...RosterV13.people(d,students).map(p=>p.class),...Object.values(d.exams).flatMap(e=>e.referenceClasses||[])].filter(Boolean))];},
         view,
         run,
         reset,
