@@ -1,6 +1,6 @@
 /* Fictional prototype content. Business feedback confirmed 2026-10-27. */
 window.ExamSpec={
- version:'0.16.0',durations:[120,60,120],prepSeconds:900,
+ version:'0.18.5',durations:[120,60,120],prepSeconds:900,
  papers:{
   17:['请朗读：清晨，第一缕阳光越过树梢，落在安静的小路上。风吹过草木的气息，把远处的声音轻轻送到耳边。','请播报：今天上午，城市公共阅读空间正式向市民开放。多项阅读活动将持续开展，为社区提供便利服务。','请围绕“如何在快节奏生活中保持专注”进行评述，观点清晰，表达自然。'],
   19:['请朗读：夜色渐深，街角的灯依然亮着。人们带着一天的故事走向家门，熟悉的问候让疲惫慢慢消散。','请播报：本周末，社区文化中心将举办自然观察活动。市民可通过线上预约参与，了解身边的植物与生态。','请围绕“日常生活中的小改变能否带来大影响”进行评述。'],
@@ -22,5 +22,5 @@ window.ExamSpec={
 ExamSpec.prepareCues=[{"subject": "作品朗读", "asset": "assets/prepare-reading-v14.mp3", "announceMs": 3100, "countdownMs": 3000, "startMs": 700, "totalMs": 6800}, {"subject": "新闻播报", "asset": "assets/prepare-news-v14.mp3", "announceMs": 3100, "countdownMs": 3000, "startMs": 700, "totalMs": 6800}, {"subject": "话题评述", "asset": "assets/prepare-comment-v14.mp3", "announceMs": 3100, "countdownMs": 3000, "startMs": 700, "totalMs": 6800}];
 ExamSpec.introCue=ExamSpec.prepareCues[0];
 
-ExamSpec.captureLifecycle=['准备文字与语音','3、2、1及开始','正式录制','保存本科','下一科准备或三科原片核对'];
+ExamSpec.captureLifecycle=['准备文字与语音','3、2、1及开始','正式录制','保存本科','下一科准备或本地回执齐备'];
 ExamSpec.scoreBands=[{lower:0,upper:60,inclusive:false,label:'60分以下'},{lower:60,upper:70,inclusive:false,label:'60–70分'},{lower:70,upper:80,inclusive:false,label:'70–80分'},{lower:80,upper:90,inclusive:false,label:'80–90分'},{lower:90,upper:100,inclusive:true,label:'90–100分'}];

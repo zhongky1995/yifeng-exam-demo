@@ -14,7 +14,6 @@
       e.batchLabel ??= '上午批';
       e.reportScope ??= '本次考试';
       e.setupReview ??= null;
-      e.studentVideoRelease ??= {enabled:false,at:'',by:''};
       e.batches ??= {};
       e.watchRecords ??= {};
       e.metricsSynthetic ??= false;
@@ -32,12 +31,13 @@
     }
     return d;
   }
+  // Prototype sample identifiers are not HTTP DTO IDs; production must read persistent videoId/materialVersionId/mediaIds separately.
   function studentReplay(e,person) {
     const r=e.records[person],ended=!!r?.onsiteEnded,released=ExamScopeV15.release(e,person),opened=!!released.enabled;
     const items=subjects.map((subject,q)=>{
       const f=r?.files[q],blocked=f?.abnormal||e.exceptions.some(x=>x.person===person&&x.q===q&&['material','retake','replace'].includes(x.type)&&['pending','approved','executing','awaiting_material'].includes(x.status));
-      const state=r?.attendance==='absent'?'absent':!ended?'exam_pending':!opened?'not_open':!f||f.upload!=='received'||!f.serverVerified?'processing':!f.checked||blocked?'checking':'ready';
-      const label={absent:'暂无考试录像',exam_pending:'考试尚未结束',not_open:'等待教务开放',processing:'视频处理中',checking:'视频复核中',ready:'可以回看'}[state];
+      const state=r?.attendance==='absent'?'absent':!ended?'exam_pending':!opened?'not_open':!e.v4?.closedSessions[ExamScopeV15.personBatch(e,person)]?'session_pending':!f||f.upload!=='received'||!f.serverVerified?'processing':blocked||f.qualityState==='ISSUE'?'issue':!f.checked||f.qualityState!=='APPROVED'?'checking':'ready';
+      const label={absent:'暂无考试录像',exam_pending:'考试尚未结束',not_open:'等待教务开放',session_pending:'本考试时段尚未收场',issue:'视频有问题，等待处理',processing:'视频处理中',checking:'视频复核中',ready:'可以回看'}[state];
       return {q,subject,state,label,canPlay:state==='ready',duration:state==='ready'?f.duration:null,version:state==='ready'?f.version:null,playbackId:state==='ready'?f.id:null};
     });
     return {ended,opened,releasedAt:opened?released.at:'',available:items.filter(x=>x.canPlay).length,items};
@@ -62,10 +62,11 @@
     const valid=batch(e,teacher,q).scored;
     return valid.map(person=>({person,...e.scores[scoreKey(q,teacher,person)]})).sort((a,b)=>((b.updatedAtMs??Date.parse((b.updatedAt||'').replace(' ','T')))||0)-((a.updatedAtMs??Date.parse((a.updatedAt||'').replace(' ','T')))||0)||(b.saveOrder||0)-(a.saveOrder||0)).slice(0,limit);
   }
+  function recordSubmissionFact(e,q,t,meta){e.batchSubmissionFacts??=[];const id=`${e.id}:${q}:${t}:submission:${meta.revision}`;if(!e.batchSubmissionFacts.some(x=>x.id===id))e.batchSubmissionFacts.push({id,q,teacher:t,batchRevision:meta.revision,submittedAt:meta.submittedAt});}
   function markSubmitted(e) {
     for (let q=0;q<3;q++) for (const t of e.assignments[q]) {
       const b=batch(e,t,q);
-      if (!b.missing.length && b.expected) Object.assign(e.batches[batchKey(q,t)],{status:'submitted',revision:1,submittedAt:stamp()});
+      if (!b.missing.length && b.expected){const meta=e.batches[batchKey(q,t)];Object.assign(meta,{status:'submitted',revision:1,submittedAt:stamp()});recordSubmissionFact(e,q,t,meta);}
     }
   }
   const validScore = value => value !== '' && value !== null && value !== undefined && /^\d+(\.\d{1,2})?$/.test(String(value)) && Number(value)>=0 && Number(value)<=100;
@@ -79,7 +80,7 @@
         needs(!RoomStaffV14.issues(e,d.staff).length,RoomStaffV14.issues(e,d.staff).join('；'));needs(d.staff[e.staff.invigilator]?.active&&d.staff[e.staff.recorder]?.active,'现场岗位尚未安排有效人员。');needs(e.assignments.every(v=>v.length)&&new Set(e.assignments.flat()).size===e.assignments.flat().length,'请按单老师单科核对全部评分分工。');needs(input.verified,'请确认岗位及评分分工已核对。');
         e.setupReview={staffRev:e.staffRev,assignmentRev:e.assignmentRev,at:stamp(),by:c.actorId};return result('岗位和评分分工已核对，继续检查并开放本场。','W01');
       case 'open-student-videos': {
-        group('academic');needs(e.status!=='draft','本场尚未开放考试。');const batch=ExamScopeV15.batches(e).find(b=>b.id===(input.batchId||'legacy'));needs(batch&&batch.ids.length,'请选择有考生的现场班次。');needs(batch.ids.every(id=>e.records[id].onsiteEnded||e.records[id].attendance==='absent'),'这个班次仍有现场考试未结束，其他班次不受影响。');needs(input.verified,'请确认本班次现场已结束，视频逐科核验后向本人开放。');e.studentVideoReleases??={};if(e.studentVideoReleases[batch.id]?.enabled)return result('本班次已开放，保留原开放记录。');e.studentVideoReleases[batch.id]={enabled:true,at:stamp(),by:c.actorId};if(batch.id==='legacy')e.studentVideoRelease={...e.studentVideoReleases[batch.id]};return result('已开放'+batch.label+'本人视频；仅已收到并核验通过的本科可播放，无需等待评分。');
+        group('academic');needs(e.status!=='draft','本场尚未开放考试。');const batch=ExamScopeV15.batches(e).find(b=>b.id===(input.batchId||'legacy'));needs(batch&&batch.ids.length,'请选择有考生的现场班次。');needs(batch.ids.every(id=>e.records[id].onsiteEnded||e.records[id].attendance==='absent'),'这个班次仍有现场考试未结束，其他班次不受影响。');needs(input.verified,'请确认本班次现场已结束，视频逐科核验后向本人开放。');e.studentVideoReleases??={};if(e.studentVideoReleases[batch.id]?.enabled)return result('本班次已开放，保留原开放记录。');const previous=e.studentVideoReleases[batch.id];e.studentVideoReleases[batch.id]={enabled:true,at:stamp(),by:c.actorId,version:(previous?.version||0)+1};e.videoSessionRevisions[batch.id]++;if(batch.id==='legacy')e.studentVideoRelease={...e.studentVideoReleases[batch.id]};return result('已开放'+batch.label+'本人视频；仅已收到并核验通过的本科可播放，无需等待评分。');
       }
       case 'accept-person':
         group('recorder');person();needs(input.verified,'请先核对考号、机位和原题组，再确认接收。');return null;
@@ -109,7 +110,7 @@
         return result('本科已结束，正在保存原片；保存未成功不会开下一科。');
       case 'query-save': case 'retry-save':
         group('recorder');currentPerson();needs(['saving','save_failed'].includes(r.stage),'当前没有待恢复的保存任务。');
-        needs(!d.faults.saveFail,'保存仍失败，原任务与已录片段保留；先恢复模拟故障再查询。');r.stage='saving';r.saveAt=now(d);
+        needs(!d.faults.saveCallbackUnknown,'原保存结果仍未知，请查询同一输出，不重复录制。');needs(!d.faults.saveFail,'保存仍失败，原任务与已录片段保留；先恢复模拟故障再查询。');r.stage='saving';r.saveAt=now(d);
         return result('正在核对同一科原保存结果，不重录、不改变学员归属。');
       case 'pause-sequence':
         group('recorder');currentPerson();needs(['recording','intro','buffer','awaiting_next'].includes(r.stage),'当前不在可暂停/接续阶段。');
@@ -150,9 +151,9 @@
       }
       case 'save-score-policy':group('academic');{const value=input.threshold===''?null:Number(input.threshold);needs(value===null||Number.isFinite(value)&&value>0&&value<=100,'请输入合法参考阈值或保持未配置。');e.scorePolicy={differenceThreshold:value};return result('仅保存演示提醒口径，不自动调分。');}
       case 'draft-score':
-        teacher();needs(r.attendance!=='absent','已正式缺考，不计入应评，不填写分数。');needs(batch(e,a.teacher,q).status!=='submitted','当前批已提交；按R05建议须由教务退回后再改。');e.drafts[scoreKey(q,a.teacher,p)]=String(input.value??'');return result('本人输入已保留，尚未保存。');
+        teacher();needs(r.attendance!=='absent','已正式缺考，不计入应评，不填写分数。');needs(batch(e,a.teacher,q).status!=='submitted','TEST演示批已提交只读；D08正式退回与换评委待确认，本版禁用。');e.drafts[scoreKey(q,a.teacher,p)]=String(input.value??'');return result('本人输入已保留，尚未保存。');
       case 'save-score': {
-        teacher();needs(r.attendance!=='absent','已正式缺考，不计入应评，不填写分数。');const b=batch(e,a.teacher,q),f=r.files[q],key=scoreKey(q,a.teacher,p);needs(b.status!=='submitted','当前批已提交，普通入口只读；请由教务按建议退回。');
+        teacher();needs(r.attendance!=='absent','已正式缺考，不计入应评，不填写分数。');const b=batch(e,a.teacher,q),f=r.files[q],key=scoreKey(q,a.teacher,p);needs(b.status!=='submitted','TEST演示批已提交只读；D08正式退回待确认，本版禁用。');
         needs(e.opened[q]&&f?.checked&&!f.abnormal&&!fileBlocked(e,p,q),'当前材料未开放、失效或有问题，不能用填分代替处理。');needs(input.videoVersion===undefined||input.videoVersion===f.version,'材料版本已更新，请重新查看当前视频后打分。');needs(validScore(input.value),'请填写0–100分，最多两位小数为演示口径；空白不能当成0。');needs(!d.faults.saveFail,'评分保存失败，原输入保留，可在原任务重试。');
         const old=e.scores[key],value=Number(input.value);if(old)e.scoreAudit.push({key,...structuredClone(old),newValue:value,reason:'当前批本人回改',at:stamp(),by:actorIdOrName(c)});
         e.scores[key]={value,videoVersion:f.version,revision:(old?.revision||0)+1,updatedAt:stamp(),updatedAtMs:Date.now(),saveOrder:++d.seq,reviewMs:Number.isFinite(input.reviewMs)&&input.reviewMs>=0?Math.max(input.reviewMs,old?.timeSource==='browser'?old.reviewMs||0:0):old?.reviewMs??null,timeSource:Number.isFinite(input.reviewMs)?'browser':old?.timeSource||null};delete e.drafts[key];e.scoreRev++;
@@ -161,7 +162,7 @@
       case 'submit-review-batch': {
         group('teacher');needs(e.assignments[q]?.includes(a.teacher),'本人没有这科评卷批。');const b=batch(e,a.teacher,q);needs(!b.missing.length&&b.expected,`当前批仍有${b.missing.length}份未有效评分，不能提交本批。`);needs(e.opened[q],'本科尚未开放。');
         const meta=e.batches[batchKey(q,a.teacher)];if(meta.status==='submitted')return result('本批已提交，读取原提交记录。','W17');
-        meta.history.push({revision:meta.revision+1,scores:structuredClone(Object.fromEntries(b.scored.map(p=>[p,e.scores[scoreKey(q,a.teacher,p)]]))),at:stamp()});meta.revision++;meta.status='submitted';meta.submittedAt=stamp();
+        meta.history.push({revision:meta.revision+1,scores:structuredClone(Object.fromEntries(b.scored.map(p=>[p,e.scores[scoreKey(q,a.teacher,p)]]))),at:stamp()});meta.revision++;meta.status='submitted';meta.submittedAt=stamp();recordSubmissionFact(e,q,a.teacher,meta);
         return result('本人本批已评齐并提交；按R05建议进入教务核查，报告仍可查看。','W17');
       }
       case 'return-review-batch': {
@@ -169,10 +170,10 @@
         e.reportStale=true;return result('按方案R05退回同一评卷批，原提交版本保留，老师可回改后重新提交。');
       }
       case 'create-correction': case 'decide-correction': case 'cancel-correction':
-        needs(false,'新版当前批评分直接回改；提交后的恢复按教务退回建议，不再使用旧改分申请路径。');return null;
+        needs(false,'新版当前批评分直接回改；提交后只读，正式恢复和更正流程待D08确认，本版禁用。');return null;
       case 'publish': {
         group('academic');needs(input.scoreRev===e.scoreRev,'评分已变化，请重新核对本次结果。');needs(!c.publishIssues(e).length,'当前仍有材料/缺评待办，不能定稿。');
-        for(let sq=0;sq<3;sq++)for(const t of e.assignments[sq])needs(batch(e,t,sq).expected===0||batch(e,t,sq).status==='submitted','仍有评委本批未提交，先核对完整评卷进度。');
+        needs(!submittedIssues(e).length,'仍有应评批次未提交或原提交标识待核对，不能形成核查版本。');
         if(e.publications.at(-1)?.scoreRev===e.scoreRev)return result('当前核查版本已留存，不重复创建。','W18');
         e.publications.push(c.snapshot(e));e.reportStale=false;return result('教务内部核查版本已留存，未向考生展示或发布。','W18');
       }
@@ -192,6 +193,7 @@
         if(['intro','buffer'].includes(r.stage)&&r.phaseDeadline>0&&r.phaseDeadline<=at&&!(r.stage==='intro'&&r.introAudioOwner)){r.stage='recording';r.started=at;r.captureDeadline=at+ExamSpec.durations[r.subject]*1000;changed=true;}
         else if(r.stage==='recording'&&(r.captureDeadline||r.started+ExamSpec.durations[r.subject]*1000)<=at){r.stage='saving';r.stopDuration=ExamSpec.durations[r.subject];r.stopReason='本科到时';r.endedAt=at;r.saveAt=at+650;changed=true;}
         else if(r.stage==='saving'&&r.saveAt<=at){
+          if(d.faults.saveCallbackUnknown){if(!r.saveOutcomeUnknown){r.saveOutcomeUnknown=true;changed=true;}continue;}r.saveOutcomeUnknown=false;
           if(d.faults.saveFail){r.stage='save_failed';changed=true;continue;}
           const q=r.subject;
           if(!r.files[q])r.files[q]={...helpers.fullFile(e,r.id,q,r.history[q].length+1,r.captureOwner||ExamScopeV15.fileOwner(e,r.id)),upload:'none',localReviewed:false,checked:false,serverVerified:false,duration:r.stopDuration||ExamSpec.durations[q],early:(r.stopDuration||ExamSpec.durations[q])<ExamSpec.durations[q],endReason:r.stopReason||'本科到时',endedAt:r.endedAt,endedBy:r.stopReason==='本科到时'?'系统到时':r.endedBy,recorded:true};
@@ -216,7 +218,7 @@
     d.captureTimeOffset=(d.captureTimeOffset||0)+Math.max(0,end-at)+1;return {ok:true,message:'仅推演时钟已推进到本阶段结束，原任务和题组不变。'};
   }
   function submittedIssues(e) {
-    const items=[];for(let q=0;q<3;q++)for(const t of e.assignments[q])if(batch(e,t,q).expected&&batch(e,t,q).status!=='submitted')items.push(`${subjects[q]}的评委${t+1}本批未提交`);return items;
+    const items=[];for(let q=0;q<3;q++)for(const t of e.assignments[q]){const b=batch(e,t,q);if(b.expected&&(b.status!=='submitted'||!e.batchSubmissionFacts?.some(f=>f.q===q&&f.teacher===t&&f.batchRevision===b.revision)))items.push(`${subjects[q]}的评委${t+1}本批未提交或原提交标识待核对`);}return items;
   }
   window.WorkflowRevision={decorate,studentReplay,batch,distribution,recentScores,markSubmitted,run,pulse,advance,now,localCommands,submittedIssues,batchKey,scoreKey};
 })();
